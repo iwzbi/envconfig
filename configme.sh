@@ -1,6 +1,7 @@
 #!/bin/bash
 
-sudo apt update && sudo apt install -y zsh neovim tmux autojump || {
+[[ $EUID -eq 0 ]] && SUDO="" || SUDO="sudo"
+$SUDO apt update && $SUDO apt install -y zsh neovim tmux autojump || {
   echo "Installation of packages failed or not applicable in this environment."
 }
 
