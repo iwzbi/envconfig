@@ -59,6 +59,34 @@ else
   echo "Powerlevel10k is already installed."
 fi
 
+LUNARVIM_DIR="$HOME/.local/share/lunarvim"
+
+if [ -d "$LUNARVIM_DIR" ]; then
+  echo "LunarVim is already installed at $LUNARVIM_DIR."
+else
+  echo "LunarVim is not installed. Proceeding with installation..."
+
+  if ! command -v node &>/dev/null; then
+    echo "Node.js is not installed. Installing Node.js..."
+    sudo apt update
+    sudo apt install -y nodejs npm
+  fi
+
+  if ! command -v python3 &>/dev/null || ! command -v pip3 &>/dev/null; then
+    echo "Python3 or pip3 is not installed. Installing Python3 and pip..."
+    sudo apt update
+    sudo apt install -y python3 python3-pip
+  fi
+
+  echo "Installing LunarVim..."
+  LV_BRANCH='release-1.4/neovim-0.9' bash <(curl -s https://raw.githubusercontent.com/LunarVim/LunarVim/release-1.4/neovim-0.9/utils/installer/install.sh)
+  if [ -d "$LUNARVIM_DIR" ]; then
+    echo "LunarVim installation completed successfully."
+  else
+    echo "LunarVim installation failed. Please check the logs for details."
+  fi
+fi
+
 conf_dir="$PWD/.conf"
 timestamp=$(date +"%Y%m%d%H%M%S")
 for file in "$conf_dir"/.*; do
