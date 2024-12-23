@@ -104,4 +104,7 @@ for file in "$conf_dir"/.*; do
     fi
 done
 
+git clone --depth 1 https://github.com/junegunn/fzf.git ~/.fzf
+~/.fzf/install
+
 echo "Please restart your terminal or run 'source ~/.zshrc' to apply the changes."
