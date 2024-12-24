@@ -1,9 +1,14 @@
 #!/bin/bash
 
 [[ $EUID -eq 0 ]] && SUDO="" || SUDO="sudo"
-$SUDO apt update && $SUDO apt install -y zsh neovim tmux autojump || {
+$SUDO apt update && $SUDO apt install -y zsh tmux autojump || {
   echo "Installation of packages failed or not applicable in this environment."
 }
+
+echo "Remove neovim at /opt and reinstall latest version..."
+curl -LO https://github.com/neovim/neovim/releases/latest/download/nvim-linux64.tar.gz
+$SUDO rm -rf /opt/nvim
+$SUDO tar -C /opt -xzf nvim-linux64.tar.gz
 
 if [ ! -d "$HOME/.oh-my-zsh" ]; then
   echo "Oh My Zsh is not installed. Installing Oh My Zsh..."
@@ -104,6 +109,7 @@ for file in "$conf_dir"/.*; do
     fi
 done
 
+echo "Install fzf..."
 git clone --depth 1 https://github.com/junegunn/fzf.git ~/.fzf
 ~/.fzf/install
 
