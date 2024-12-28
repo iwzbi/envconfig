@@ -54,7 +54,7 @@
         repo: '{{ item.repo }}'
         dest: '{{ item.dest }}'
       with_items:
-        - { repo: 'https://github.com/romkatv/powerlevel10k.git', dest: '{{ ansible_env.HOME }}/.oh-my-zsh/custom/themes/powerlevel10' }
+        - { repo: 'https://github.com/romkatv/powerlevel10k.git', dest: '{{ ansible_env.HOME }}/.oh-my-zsh/custom/themes/powerlevel10k' }
         - { repo: 'https://github.com/zsh-users/zsh-syntax-highlighting.git', dest: '{{ ansible_env.HOME }}/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting' }
         - { repo: 'https://github.com/zsh-users/zsh-autosuggestions', dest: '{{ ansible_env.HOME }}/.oh-my-zsh/custom/plugins/zsh-autosuggestions' }
 
