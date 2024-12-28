@@ -1,0 +1,115 @@
+- name: Config one time!
+  hosts: myhosts
+  tasks:
+    - name: Install OS packages
+      ansible.builtin.package:
+        name: 
+          - vim
+          - git
+          - zsh
+          - curl
+          - wget
+          - tmux
+          - autojump
+          - nodejs
+          - npm
+          - cargo
+        state: present
+
+    - name: Install neovim from prebuilt
+      block:
+        - name: Download neovim latest version
+          get_url:
+            url: https://github.com/neovim/neovim/releases/latest/download/nvim-linux64.tar.gz
+            dest: /tmp/nvim-linux64.tar.gz
+
+        - name: Unarchive neovim
+          unarchive:
+            src: /tmp/nvim-linux64.tar.gz
+            dest: /opt
+            creates: /opt/nvim-linux64
+
+    - name: Install Oh My Zsh
+      block:
+        - name: Remove old directory
+          file:
+            path: '{{ ansible_env.HOME }}/.oh-my-zsh'
+            state: absent
+
+        - name: Download Oh My Zsh installation script
+          get_url:
+            url: 'https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh'
+            dest: '/tmp/install_oh_my_zsh.sh'
+            mode: '0755'
+
+        - name: Run Oh My Zsh installation
+          shell: /tmp/install_oh_my_zsh.sh
+          environment:
+            RUNZSH: 'no'
+          args:
+            creates: '{{ ansible_env.HOME }}/.oh-my-zsh'
+
+    - name: Clone oh Oh My Zsh theme and plugin
+      git:
+        repo: '{{ item.repo }}'
+        dest: '{{ item.dest }}'
+      with_items:
+        - { repo: 'https://github.com/romkatv/powerlevel10k.git', dest: '{{ ansible_env.HOME }}/.oh-my-zsh/custom/themes/powerlevel10' }
+        - { repo: 'https://github.com/zsh-users/zsh-syntax-highlighting.git', dest: '{{ ansible_env.HOME }}/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting' }
+        - { repo: 'https://github.com/zsh-users/zsh-autosuggestions', dest: '{{ ansible_env.HOME }}/.oh-my-zsh/custom/plugins/zsh-autosuggestions' }
+
+    - name: Insatll LunarVim
+      block:
+        - name: Download installer
+          get_url:
+            url: 'https://raw.githubusercontent.com/LunarVim/LunarVim/release-1.4/neovim-0.9/utils/installer/install.sh'
+            dest: '/tmp/install_lunarvim.sh'
+            mode: '0755'
+
+        - name: Run install script
+          shell: /tmp/install_lunarvim.sh
+          environment:
+            LV_BRANCH: 'release-1.4/neovim-0.9'
+            PATH: '{{ ansible_env.PATH }}:/opt/nvim-linux64/bin'
+
+    - name: Install fzf
+      block:
+        - name: Clone fzf repository
+          git:
+            repo: https://github.com/junegunn/fzf.git
+            dest: '{{ ansible_env.HOME }}/.fzf'
+            depth: 1
+
+        - name: Run install script
+          command: '{{ ansible_env.HOME }}/.fzf/install'
+
+    - name: Install lazygit
+      block:
+        - name: Download lazygit binary
+          get_url:
+            url: 'https://github.com/jesseduffield/lazygit/releases/download/v0.44.1/lazygit_0.44.1_Linux_x86_64.tar.gz'
+            dest: /tmp/lazygit.tar.gz
+
+        - name: Unarchive lazygit
+          unarchive:
+            src: /tmp/lazygit.tar.gz
+            dest: /usr/local/bin/
+
+    - name: Deploy configuration files
+      block:
+        - name: Find configuration files
+          find:
+            paths: "{{ playbook_dir }}/.conf"
+            hidden: true
+            file_type: file
+          register: conf_files
+
+        - name: Copy configuration files
+          copy:
+            src: "{{ item.path }}"
+            dest: "{{ ansible_env.HOME }}/{{ item.path | basename }}"
+            remote_src: false
+          loop: "{{ conf_files.files }}"
+          loop_control:
+            label: "{{ item.path | basename }}"
+          when: item.path | basename != '.' and item.path | basename != '..'
