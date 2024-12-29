@@ -11,12 +11,25 @@
           - wget
           - tmux
           - autojump
-          - nodejs
           - npm
           - cargo
           - unzip
         state: present
+        
+    - name: Install Node.js
+      block:
+        - name: Download nvm
+          get_url:
+            url: https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh
+            dest: /tmp/install_nvm.sh
+            mode: '0755'
+            
+        - name: Install nvm
+          shell: /tmp/install_nvm.sh
 
+        - name: Download and install Node.js
+          command: nvm install 22
+          
     - name: Install neovim from prebuilt
       block:
         - name: Download neovim latest version
