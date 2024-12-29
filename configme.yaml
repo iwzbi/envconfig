@@ -1,4 +1,4 @@
-- name: Config one time!
+- name: Configure once for all!
   hosts: myhosts
   tasks:
     - name: Install OS packages
@@ -31,7 +31,7 @@
 
     - name: Install Oh My Zsh
       block:
-        - name: Remove old directory
+        - name: Remove old Oh My Zsh directory
           file:
             path: '{{ ansible_env.HOME }}/.oh-my-zsh'
             state: absent
@@ -60,13 +60,13 @@
 
     - name: Insatll LunarVim
       block:
-        - name: Download installer
+        - name: Download LunarVim installer
           get_url:
             url: 'https://raw.githubusercontent.com/LunarVim/LunarVim/release-1.4/neovim-0.9/utils/installer/install.sh'
             dest: '/tmp/install_lunarvim.sh'
             mode: '0755'
 
-        - name: Run install script
+        - name: Run LunarVim install script
           shell: /tmp/install_lunarvim.sh
           environment:
             LV_BRANCH: 'release-1.4/neovim-0.9'
@@ -80,7 +80,7 @@
             dest: '{{ ansible_env.HOME }}/.fzf'
             depth: 1
 
-        - name: Run install script
+        - name: Run fzf install script
           command: '{{ ansible_env.HOME }}/.fzf/install'
 
     - name: Install lazygit
