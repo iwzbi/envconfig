@@ -28,8 +28,15 @@
           shell: /tmp/install_nvm.sh
 
         - name: Download and install Node.js
-          command: nvm install 22
-          
+          shell:
+            cmd: |
+              source {{ ansible_env.HOME }}/.nvm/nvm.sh
+              nvm install 22
+          args:
+            executable: /bin/bash
+          environment:
+            NVM_DIR: "{{ ansible_env.HOME }}/.nvm"
+
     - name: Install neovim from prebuilt
       block:
         - name: Download neovim latest version
