@@ -131,8 +131,15 @@
           copy:
             src: "{{ item.path }}"
             dest: "{{ ansible_env.HOME }}/{{ item.path | basename }}"
-            remote_src: false
           loop: "{{ conf_files.files }}"
           loop_control:
             label: "{{ item.path | basename }}"
-          when: item.path | basename != '.' and item.path | basename != '..'
+          when:
+            - item.path | basename != '.'
+            - item.path | basename != '..'
+            - item.path | basename != 'config.lua'
+
+        - name: Copy Lunarvim configuration
+          copy:
+            src: "{{ playbook_dir }}/.conf/config.lua"
+            dest: "{{ ansible_env.HOME }}/.config/lvim/config.lua"

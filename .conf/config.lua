@@ -23,13 +23,12 @@ lvim.plugins = {
       })
     end,
   },
-  -- {"ChristianChiarulli/swenv.nvim"},
-  -- {"stevearc/dressing.nvim"},
-  -- {"mfussenegger/nvim-dap-python"},
+  {"ChristianChiarulli/swenv.nvim"},
+  {"stevearc/dressing.nvim"},
+  {"mfussenegger/nvim-dap-python"},
   -- {"nvim-neotest/neotest"},
   -- {"nvim-neotest/neotest-python"},
 }
---[[
 -- automatically install python syntax highlighting
 lvim.builtin.treesitter.ensure_installed = {
   "python",
@@ -53,6 +52,7 @@ pcall(function()
 end)
 
 -- setup testing
+--[[
 require("neotest").setup({
   adapters = {
     require("neotest-python")({
@@ -67,6 +67,7 @@ require("neotest").setup({
     })
   }
 })
+--]]
 
 lvim.builtin.which_key.mappings["dm"] = { "<cmd>lua require('neotest').run.run()<cr>",
   "Test Method" }
@@ -84,4 +85,3 @@ lvim.builtin.which_key.mappings["C"] = {
   name = "Python",
   c = { "<cmd>lua require('swenv.api').pick_venv()<cr>", "Choose Env" },
 }
---]]
