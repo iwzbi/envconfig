@@ -4,14 +4,53 @@
 -- Forum: https://www.reddit.com/r/lunarvim/
 -- Discord: https://discord.com/invite/Xb9B4Ny
 
+-- options
+vim.opt.mouse = "a"
+vim.opt.clipboard = "unnamedplus" -- allows neovim to access the system clipboard
+vim.opt.cursorcolumn = true
+vim.opt.relativenumber = true
+vim.opt.wrap = true
+lvim.colorscheme = "tokyonight"
+
+-- toggleterm
 lvim.builtin["terminal"].shell = "zsh"
 lvim.builtin["terminal"].direction = "float"
 lvim.builtin["terminal"].float_opts = {
   border = "double",
 }
 
+-- telescope
+lvim.builtin.telescope.defaults = {
+  layout_strategy = 'horizontal', -- or 'vertical', 'center', 'cursor'
+  layout_config = {
+    width = 0.85,
+    height = 0.85,
+    prompt_position = "top", -- or "bottom"
+ }
+}
+
+-- bufferline
+lvim.builtin.bufferline.keymap.normal_mode["<leader>1"] = ":BufferLineGoToBuffer 1<CR>"
+lvim.builtin.bufferline.keymap.normal_mode["<leader>2"] = ":BufferLineGoToBuffer 2<CR>"
+lvim.builtin.bufferline.keymap.normal_mode["<leader>3"] = ":BufferLineGoToBuffer 3<CR>"
+lvim.builtin.bufferline.keymap.normal_mode["<leader>4"] = ":BufferLineGoToBuffer 4<CR>"
+lvim.builtin.bufferline.keymap.normal_mode["<leader>5"] = ":BufferLineGoToBuffer 5<CR>"
+lvim.builtin.bufferline.keymap.normal_mode["<leader>6"] = ":BufferLineGoToBuffer 6<CR>"
+lvim.builtin.bufferline.keymap.normal_mode["<leader>7"] = ":BufferLineGoToBuffer 7<CR>"
+lvim.builtin.bufferline.keymap.normal_mode["<leader>8"] = ":BufferLineGoToBuffer 8<CR>"
+lvim.builtin.bufferline.keymap.normal_mode["<leader>9"] = ":BufferLineGoToBuffer 9<CR>"
+
 -- install plugins
 lvim.plugins = {
+  {
+    "folke/tokyonight.nvim",
+    lazy = false,
+    priority = 1000,
+    opts = {
+      style = "night",
+      terminal_colors = false,
+    },
+  },
   {
     "simrat39/symbols-outline.nvim",
     config = function()
