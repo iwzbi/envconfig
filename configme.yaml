@@ -93,7 +93,7 @@
           shell: /tmp/install_lunarvim.sh
           environment:
             LV_BRANCH: 'release-1.4/neovim-0.9'
-            PATH: '{{ ansible_env.PATH }}:/opt/nvim-linux64/bin'
+            PATH: '{{ ansible_env.PATH }}:/opt/nvim-linux-x86_64//bin'
 
     - name: Install fzf
       block:
