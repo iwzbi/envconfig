@@ -117,7 +117,7 @@ source $ZSH/oh-my-zsh.sh
 # alias zshconfig="mate ~/.zshrc"
 # alias ohmyzsh="mate ~/.oh-my-zsh"
 export PATH=$PATH:/opt/nvim-linux-x86_64/bin
-alias vim=lvim
+alias vim=nvim
 export LC_ALL=C.UTF-8
 export LANG=C.UTF-8
 

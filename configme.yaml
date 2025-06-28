@@ -81,19 +81,13 @@
         - { repo: 'https://github.com/zsh-users/zsh-syntax-highlighting.git', dest: '{{ ansible_env.HOME }}/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting' }
         - { repo: 'https://github.com/zsh-users/zsh-autosuggestions', dest: '{{ ansible_env.HOME }}/.oh-my-zsh/custom/plugins/zsh-autosuggestions' }
 
-    - name: Insatll LunarVim
+    - name: Insatll AstroNvim
       block:
-        - name: Download LunarVim installer
-          get_url:
-            url: 'https://raw.githubusercontent.com/LunarVim/LunarVim/release-1.4/neovim-0.9/utils/installer/install.sh'
-            dest: '/tmp/install_lunarvim.sh'
-            mode: '0755'
-
-        - name: Run LunarVim install script
-          shell: /tmp/install_lunarvim.sh
-          environment:
-            LV_BRANCH: 'release-1.4/neovim-0.9'
-            PATH: '{{ ansible_env.PATH }}:/opt/nvim-linux-x86_64//bin'
+        - name: Download AstroNvim
+          git:
+            repo: https://github.com/iwzbi/MyAstroNvim.git
+            dest: '{{ ansible_env.HOME}}/.congfig/nvim'
+            depth: 1
 
     - name: Install fzf
       block:
@@ -138,8 +132,3 @@
             - item.path | basename != '.'
             - item.path | basename != '..'
             - item.path | basename != 'config.lua'
-
-        - name: Copy Lunarvim configuration
-          copy:
-            src: "{{ playbook_dir }}/.conf/config.lua"
-            dest: "{{ ansible_env.HOME }}/.config/lvim/config.lua"
