@@ -116,7 +116,7 @@
       block:
         - name: Find configuration files
           find:
-            paths: "{{ playbook_dir }}/.conf"
+            paths: "{{ playbook_dir }}/conf"
             hidden: true
             file_type: file
           register: conf_files
