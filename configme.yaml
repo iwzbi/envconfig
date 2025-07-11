@@ -86,7 +86,7 @@
         - name: Download AstroNvim
           git:
             repo: https://github.com/iwzbi/MyAstroNvim.git
-            dest: '{{ ansible_env.HOME}}/.congfig/nvim'
+            dest: '{{ ansible_env.HOME}}/.config/nvim'
             depth: 1
 
     - name: Install fzf
