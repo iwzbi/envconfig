@@ -48,6 +48,7 @@
             dest: /tmp/nvim-linux64.tar.gz
 
         - name: Unarchive neovim
+          become: true
           unarchive:
             src: /tmp/nvim-linux64.tar.gz
             dest: /opt
@@ -109,6 +110,7 @@
             dest: /tmp/lazygit.tar.gz
 
         - name: Unarchive lazygit
+          become: true
           unarchive:
             src: /tmp/lazygit.tar.gz
             dest: /usr/local/bin/
