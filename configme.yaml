@@ -2,6 +2,7 @@
   hosts: myhosts
   tasks:
     - name: Install OS packages
+      become: yes
       ansible.builtin.package:
         name: 
           - vim
