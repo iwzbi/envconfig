@@ -115,6 +115,10 @@
             src: /tmp/lazygit.tar.gz
             dest: /usr/local/bin/
 
+    - name: Install opencode
+      shell:
+        cmd: curl -fsSL https://opencode.ai/install | bash
+
     - name: Deploy configuration files
       block:
         - name: Find configuration files
