@@ -17,6 +17,7 @@
           - unzip
           - ripgrep
           - fd-find
+          - lsof
         state: present
         
     - name: Install Node.js
