@@ -4,5 +4,6 @@
 # tasks use version-specific temp paths so the change propagates automatically.
 delta_version: "0.19.2"
 zoxide_version: "0.10.0"
+eza_version: "0.23.5"
 dust_version: "1.2.5"
 lazydocker_version: "0.25.2"
