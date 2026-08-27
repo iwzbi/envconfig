@@ -26,6 +26,17 @@
     "oh-my-openagent@latest",
     "superpowers@git+https://github.com/obra/superpowers.git",
     "@tarquinen/opencode-dcp",
-    "@mohak34/opencode-notifier"
-  ]
+    "@mohak34/opencode-notifier",
+    "opencode-vibeguard",
+    "opencode-scheduler",
+    "opencode-supermemory",
+    "opencode-goal-plugin"
+  ],
+  "command": {
+    "goal": {
+      "description": "Set a session-scoped goal and auto-continue until complete.",
+      "template": "$ARGUMENTS",
+      "agent": "build"
+    }
+  }
 }
