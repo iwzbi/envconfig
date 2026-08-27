@@ -6,7 +6,7 @@ if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]
 fi
 
 # If you come from bash you might have to change your $PATH.
-export PATH=$HOME/bin:$HOME/.local/bin:/usr/local/bin:$PATH
+export PATH=$HOME/bin:$HOME/.local/bin:/usr/local/bin:$HOME/.opencode/bin:$PATH
 
 # Path to your Oh My Zsh installation.
 export ZSH="$HOME/.oh-my-zsh"
@@ -122,13 +122,9 @@ export LC_ALL=C.UTF-8
 export LANG=C.UTF-8
 
 [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
-[[ -s /root/.autojump/etc/profile.d/autojump.sh ]] && source /root/.autojump/etc/profile.d/autojump.sh
+for _aj in /usr/share/autojump/autojump.sh /etc/profile.d/autojump.sh $HOME/.autojump/etc/profile.d/autojump.sh; do [[ -s "$_aj" ]] && source "$_aj" && break; done
 autoload -U compinit && compinit -u
-PATH=$PATH:/usr/local/cuda/bin/
-
-[[ -s /root/.autojump/etc/profile.d/autojump.sh ]] && source /root/.autojump/etc/profile.d/autojump.sh
-
-autoload -U compinit && compinit -u
+[[ -d /usr/local/cuda/bin ]] && PATH=$PATH:/usr/local/cuda/bin
 
 # To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
