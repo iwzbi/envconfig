@@ -1,0 +1,31 @@
+- name: Remove old Oh My Zsh directory
+  ansible.builtin.file:
+    path: '{{ ansible_env.HOME }}/.oh-my-zsh'
+    state: absent
+  tags: [ohmyzsh]
+
+- name: Download Oh My Zsh installation script
+  ansible.builtin.get_url:
+    url: 'https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh'
+    dest: '/tmp/install_oh_my_zsh.sh'
+    mode: '0755'
+  tags: [ohmyzsh]
+
+- name: Run Oh My Zsh installation
+  ansible.builtin.shell: /tmp/install_oh_my_zsh.sh
+  environment:
+    RUNZSH: 'no'
+  args:
+    creates: '{{ ansible_env.HOME }}/.oh-my-zsh'
+  tags: [ohmyzsh]
+
+- name: Clone Oh My Zsh themes and plugins
+  ansible.builtin.git:
+    repo: '{{ item.repo }}'
+    dest: '{{ item.dest }}'
+    depth: 1
+  loop:
+    - { repo: 'https://github.com/romkatv/powerlevel10k.git', dest: '{{ ansible_env.HOME }}/.oh-my-zsh/custom/themes/powerlevel10k' }
+    - { repo: 'https://github.com/zsh-users/zsh-syntax-highlighting.git', dest: '{{ ansible_env.HOME }}/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting' }
+    - { repo: 'https://github.com/zsh-users/zsh-autosuggestions.git', dest: '{{ ansible_env.HOME }}/.oh-my-zsh/custom/plugins/zsh-autosuggestions' }
+  tags: [ohmyzsh]
