@@ -1,0 +1,6 @@
+- name: Set login shell to zsh
+  become: yes
+  ansible.builtin.user:
+    name: '{{ ansible_user_id }}'
+    shell: /bin/zsh
+  tags: [shell]
