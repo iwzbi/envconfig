@@ -1,0 +1,5 @@
+---
+# Centralized version + checksum for neovim.
+# Upgrade: update both version and sha256 (from releases page shasum.txt).
+neovim_version: "0.11.0"
+neovim_sha256: "fe0a5bc79e64c5e4d9f844cd96157ebd3919ef1343b329e9ebc3f455924cc7d6"

@@ -1,0 +1,5 @@
+---
+# Centralized version + checksum for lazygit.
+# Upgrade: update both version and sha256 (from releases page checksums.txt).
+lazygit_version: "0.44.1"
+lazygit_sha256: "84682f4ad5a449d0a3ffbc8332200fe8651aee9dd91dcd8d87197ba6c2450dbc"

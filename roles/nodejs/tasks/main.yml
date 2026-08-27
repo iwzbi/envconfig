@@ -1,20 +1,22 @@
-- name: Download nvm
+---
+- name: Download nvm v{{ nvm_version }}
   ansible.builtin.get_url:
-    url: https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh
-    dest: /tmp/install_nvm.sh
+    url: 'https://raw.githubusercontent.com/nvm-sh/nvm/v{{ nvm_version }}/install.sh'
+    dest: '/tmp/nvm-v{{ nvm_version }}.sh'
     mode: '0755'
+  register: nvm_download
   tags: [nodejs]
 
 - name: Install nvm
-  ansible.builtin.shell: /tmp/install_nvm.sh
+  ansible.builtin.shell: '/tmp/nvm-v{{ nvm_version }}.sh'
   args:
     creates: '{{ ansible_facts.user_dir }}/.nvm/nvm.sh'
   tags: [nodejs]
 
-- name: Install Node.js via nvm
+- name: Install Node.js {{ node_major }} via nvm
   ansible.builtin.shell: |
     source {{ ansible_facts.user_dir }}/.nvm/nvm.sh
-    nvm install 22
+    nvm install {{ node_major }}
   args:
     executable: /bin/bash
   environment:
