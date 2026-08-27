@@ -14,7 +14,7 @@
     colorMoved = default
 
 [merge]
-    conflictstyle = zdiff3
+    conflictstyle = diff3
 
 [core]
     pager = delta
