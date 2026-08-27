@@ -1,0 +1,14 @@
+- name: Download neovim v0.11.0
+  ansible.builtin.get_url:
+    url: https://github.com/neovim/neovim/releases/download/v0.11.0/nvim-linux-x86_64.tar.gz
+    dest: /tmp/nvim-linux-x86_64.tar.gz
+    checksum: sha256:fe0a5bc79e64c5e4d9f844cd96157ebd3919ef1343b329e9ebc3f455924cc7d6
+  tags: [neovim]
+
+- name: Unarchive neovim
+  become: true
+  ansible.builtin.unarchive:
+    src: /tmp/nvim-linux-x86_64.tar.gz
+    dest: /opt
+    creates: /opt/nvim-linux-x86_64
+  tags: [neovim]

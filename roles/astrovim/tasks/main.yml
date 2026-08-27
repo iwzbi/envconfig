@@ -1,0 +1,6 @@
+- name: Clone AstroNvim config
+  ansible.builtin.git:
+    repo: https://github.com/iwzbi/MyAstroNvim.git
+    dest: '{{ ansible_env.HOME }}/.config/nvim'
+    depth: 1
+  tags: [astrovim]
