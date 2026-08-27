@@ -25,8 +25,8 @@ What it installs
 | **astrovim** | MyAstroNvim config to `~/.config/nvim` |
 | **fzf** | fuzzy finder + key-bindings/completion (`--all`) |
 | **lazygit** | git TUI, binary-only to `/usr/local/bin` (SHA256-verified) |
-| **configs** | deploys dotfiles from `conf/`; `.p10k.zsh` copied only if missing (`force: no`) |
-| **opencode** | opencode CLI to `~/.opencode/bin` (always-latest; self-skips when current) |
+| **configs** | deploys dotfiles from `conf/`; sets `EDITOR`/`VISUAL=nvim`; `.p10k.zsh` copied only if missing (`force: no`) |
+| **opencode** | opencode CLI to `~/.opencode/bin` (always-latest; self-skips when current) + syncs pre-saved `opencode.json`/`tui.json`/`dcp.jsonc` from `conf/opencode/` to `~/.config/opencode/` (DCP compress limits: 400k upper/100k lower; API key reads `{file:~/.secrets/idealab.key}` so it stays out of the repo) |
 | **shell** | sets login shell to `/bin/zsh` |
 
 Run a subset with tags (one tag per role): `--tags neovim,fzf`.
@@ -72,6 +72,7 @@ Run inside the container and confirm each:
 - **`universe` apt component**: `autojump` lives in Ubuntu's `universe`. The Dockerfile enables it; on a real host ensure `universe` is enabled or the `packages` role fails.
 - **nvm stdout coupling**: the `nodejs` role's `changed_when` keys off nvm's exact `"is already installed"` wording. Works today; fragile to upstream nvm changes.
 - **Oh My Zsh**: deliberately non-idempotent (reinstalled every run per user preference) — expect `changed` on that role every run.
+- **opencode API key**: `conf/opencode/opencode.json` reads the key from `{file:~/.secrets/idealab.key}` (kept out of this public repo). One-time per machine: `mkdir -p ~/.secrets && printf '%s' 'YOUR_KEY' > ~/.secrets/idealab.key && chmod 600 ~/.secrets/idealab.key`. Without it, opencode runs but the idealab provider has no key.
 
 Test image design
 -----------------

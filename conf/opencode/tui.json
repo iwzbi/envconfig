@@ -1,0 +1,10 @@
+{
+  "$schema": "https://opencode.ai/tui.json",
+  "leader_timeout": 2000,
+  "keybinds": {
+    "messages_page_up": "ctrl+b,pageup",
+    "messages_page_down": "ctrl+f,pagedown",
+    "messages_half_page_up": "ctrl+u",
+    "messages_half_page_down": "ctrl+d"
+  }
+}
