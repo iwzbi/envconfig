@@ -1,7 +1,0 @@
-{
-  "similarityThreshold": 0.6,
-  "maxMemories": 5,
-  "captureEveryNTurns": 3,
-  "compactionThreshold": 0.8,
-  "injectProfile": true
-}

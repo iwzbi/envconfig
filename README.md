@@ -26,7 +26,7 @@ What it installs
 | **fzf** | fuzzy finder + key-bindings/completion (`--all`) |
 | **lazygit** | git TUI, binary-only to `/usr/local/bin` (SHA256-verified) |
 | **configs** | deploys dotfiles from `conf/`; sets `EDITOR`/`VISUAL=nvim`; `.p10k.zsh` copied only if missing (`force: no`) |
-| **opencode** | opencode CLI to `~/.opencode/bin` (always-latest; self-skips when current) + syncs pre-saved `opencode.json`/`tui.json`/`dcp.jsonc`/`vibeguard.config.json`/`supermemory.jsonc`/`oh-my-opencode.json` from `conf/opencode/` to `~/.config/opencode/`. Plugins: pty, oh-my-openagent, superpowers, dcp (compress limits 400k/100k), notifier, vibeguard (secret redaction), scheduler (cron jobs), supermemory (cross-session memory), goal-plugin (`/goal` auto-continue). idealab API key reads `{file:~/.secrets/idealab.key}`, supermemory key via `SUPERMEMORY_API_KEY` env — both kept out of the repo |
+| **opencode** | opencode CLI to `~/.opencode/bin` (always-latest; self-skips when current) + syncs pre-saved `opencode.json`/`tui.json`/`dcp.jsonc`/`vibeguard.config.json` from `conf/opencode/` to `~/.config/opencode/`. Plugins: pty, oh-my-openagent, superpowers, dcp (compress limits 400k/100k), notifier, vibeguard (secret redaction), scheduler (cron jobs), goal-plugin (`/goal` auto-continue). idealab API key reads `{file:~/.secrets/idealab.key}` — kept out of the repo |
 | **shell** | sets login shell to `/bin/zsh` |
 
 Run a subset with tags (one tag per role): `--tags neovim,fzf`.
@@ -73,7 +73,6 @@ Run inside the container and confirm each:
 - **nvm stdout coupling**: the `nodejs` role's `changed_when` keys off nvm's exact `"is already installed"` wording. Works today; fragile to upstream nvm changes.
 - **Oh My Zsh**: deliberately non-idempotent (reinstalled every run per user preference) — expect `changed` on that role every run.
 - **opencode API key**: `conf/opencode/opencode.json` reads the key from `{file:~/.secrets/idealab.key}` (kept out of this public repo). One-time per machine: `mkdir -p ~/.secrets && printf '%s' 'YOUR_KEY' > ~/.secrets/idealab.key && chmod 600 ~/.secrets/idealab.key`. Without it, opencode runs but the idealab provider has no key.
-- **supermemory API key**: the `opencode-supermemory` plugin reads its key from `SUPERMEMORY_API_KEY` env (`.zshrc` sources `~/.secrets/supermemory.key` when present). One-time per machine: `mkdir -p ~/.secrets && printf '%s' 'YOUR_KEY' > ~/.secrets/supermemory.key && chmod 600 ~/.secrets/supermemory.key`. Without it, supermemory memory features are disabled; the rest of opencode still works. Also run `bunx opencode-supermemory@latest install --no-tui` once to create the `/supermemory-init` convenience command.
 
 Test image design
 -----------------

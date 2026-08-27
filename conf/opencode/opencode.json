@@ -29,7 +29,6 @@
     "@mohak34/opencode-notifier",
     "opencode-vibeguard",
     "opencode-scheduler",
-    "opencode-supermemory",
     "opencode-goal-plugin"
   ],
   "command": {

@@ -99,11 +99,6 @@ source $ZSH/oh-my-zsh.sh
 export EDITOR='nvim'
 export VISUAL='nvim'
 
-# Supermemory API key for opencode-supermemory plugin (read from secret file, kept out of repo)
-if [ -f ~/.secrets/supermemory.key ]; then
-  export SUPERMEMORY_API_KEY="$(cat ~/.secrets/supermemory.key)"
-fi
-
 # Compilation flags
 # export ARCHFLAGS="-arch $(uname -m)"
 
