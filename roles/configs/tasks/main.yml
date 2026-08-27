@@ -9,7 +9,7 @@
 - name: Copy managed configuration files (authoritative)
   ansible.builtin.copy:
     src: '{{ item.path }}'
-    dest: '{{ ansible_env.HOME }}/{{ item.path | basename }}'
+    dest: '{{ ansible_user_dir }}/{{ item.path | basename }}'
   loop: '{{ conf_files.files }}'
   loop_control:
     label: '{{ item.path | basename }}'
@@ -19,6 +19,6 @@
 - name: Copy personalized p10k config (only if missing)
   ansible.builtin.copy:
     src: '{{ playbook_dir }}/conf/.p10k.zsh'
-    dest: '{{ ansible_env.HOME }}/.p10k.zsh'
+    dest: '{{ ansible_user_dir }}/.p10k.zsh'
     force: no
   tags: [configs]

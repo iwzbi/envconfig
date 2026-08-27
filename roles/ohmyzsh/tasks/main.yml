@@ -1,6 +1,6 @@
 - name: Remove old Oh My Zsh directory
   ansible.builtin.file:
-    path: '{{ ansible_env.HOME }}/.oh-my-zsh'
+    path: '{{ ansible_user_dir }}/.oh-my-zsh'
     state: absent
   tags: [ohmyzsh]
 
@@ -16,7 +16,7 @@
   environment:
     RUNZSH: 'no'
   args:
-    creates: '{{ ansible_env.HOME }}/.oh-my-zsh'
+    creates: '{{ ansible_user_dir }}/.oh-my-zsh'
   tags: [ohmyzsh]
 
 - name: Clone Oh My Zsh themes and plugins
@@ -25,7 +25,7 @@
     dest: '{{ item.dest }}'
     depth: 1
   loop:
-    - { repo: 'https://github.com/romkatv/powerlevel10k.git', dest: '{{ ansible_env.HOME }}/.oh-my-zsh/custom/themes/powerlevel10k' }
-    - { repo: 'https://github.com/zsh-users/zsh-syntax-highlighting.git', dest: '{{ ansible_env.HOME }}/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting' }
-    - { repo: 'https://github.com/zsh-users/zsh-autosuggestions.git', dest: '{{ ansible_env.HOME }}/.oh-my-zsh/custom/plugins/zsh-autosuggestions' }
+    - { repo: 'https://github.com/romkatv/powerlevel10k.git', dest: '{{ ansible_user_dir }}/.oh-my-zsh/custom/themes/powerlevel10k' }
+    - { repo: 'https://github.com/zsh-users/zsh-syntax-highlighting.git', dest: '{{ ansible_user_dir }}/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting' }
+    - { repo: 'https://github.com/zsh-users/zsh-autosuggestions.git', dest: '{{ ansible_user_dir }}/.oh-my-zsh/custom/plugins/zsh-autosuggestions' }
   tags: [ohmyzsh]
