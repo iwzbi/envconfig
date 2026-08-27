@@ -1,7 +1,12 @@
 {
   "$schema": "https://raw.githubusercontent.com/Opencode-DCP/opencode-dynamic-context-pruning/master/dcp.schema.json",
+  "turnProtection": {
+    "enabled": true,
+    "turns": 4
+  },
   "compress": {
     "maxContextLimit": 400000,
-    "minContextLimit": 100000
+    "minContextLimit": 100000,
+    "protectUserMessages": true
   }
 }

@@ -39,7 +39,7 @@ What it installs
 | **fzf** | fuzzy finder + key-bindings/completion (`--all`) |
 | **lazygit** | git TUI, binary-only to `/usr/local/bin` (SHA256-verified) |
 | **configs** | deploys dotfiles from `conf/`; sets `EDITOR`/`VISUAL=nvim`; `.p10k.zsh` copied only if missing (`force: no`) |
-| **opencode** | opencode CLI to `~/.opencode/bin` (always-latest; self-skips when current) + syncs pre-saved `opencode.json`/`tui.json`/`dcp.jsonc`/`vibeguard.config.json` from `conf/opencode/` to `~/.config/opencode/`. `opencode.json` reads idealab API key from `{file:~/.secrets/idealab.key}` — see [opencode API key](#opencode-api-key) below. |
+| **opencode** | opencode CLI to `~/.opencode/bin` (always-latest; self-skips when current) + syncs `conf/opencode/{opencode.json,tui.json,dcp.jsonc,vibeguard.config.json,opencode-notifier.json}` → `~/.config/opencode/` and `conf/omo/omo.jsonc` → `~/.omo/`. DCP: compress 400k/100k + `protectUserMessages` + `turnProtection` (last 4 turns). omo: `experimental.aggressive_truncation`/`disable_omo_env` + `disabled_hooks:[startup-toast]`. `opencode.json` reads idealab API key from `{file:~/.secrets/idealab.key}` — see [opencode API key](#opencode-api-key) below. |
 | **shell** | sets login shell to `/bin/zsh` |
 
 Run a subset with tags (one tag per role): `--tags neovim,fzf`.

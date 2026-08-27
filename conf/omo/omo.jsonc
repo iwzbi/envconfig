@@ -1,0 +1,9 @@
+{
+  "[opencode]": {
+    "experimental": {
+      "aggressive_truncation": true,
+      "disable_omo_env": true
+    },
+    "disabled_hooks": ["startup-toast"]
+  }
+}
