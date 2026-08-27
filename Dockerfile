@@ -5,7 +5,10 @@ ENV DEBIAN_FRONTEND=noninteractive
 # The stock ubuntu:24.04 image already includes the 'universe' component
 # (Components: main universe restricted multiverse in ubuntu.sources),
 # so 'autojump' from the 'packages' role is available without extra config.
-RUN apt-get update \
+# Bypass any proxy env vars for apt (the proxy may 403 on Ubuntu archives).
+RUN echo 'Acquire::http::Proxy "DIRECT";' > /etc/apt/apt.conf.d/99no-proxy \
+  && echo 'Acquire::https::Proxy "DIRECT";' >> /etc/apt/apt.conf.d/99no-proxy \
+  && apt-get update \
   && apt-get install -y --no-install-recommends \
        python3 python3-venv python3-pip \
        sudo git curl wget ca-certificates openssh-client \

@@ -1,5 +1,6 @@
 - name: Configure once for all!
-  hosts: myhosts
+  hosts: localhost
+  connection: local
   roles:
     - packages
     - nodejs
