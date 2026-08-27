@@ -37,5 +37,17 @@
       "template": "$ARGUMENTS",
       "agent": "build"
     }
+  },
+  "permission": {
+    "bash": {
+      "*": "allow",
+      "rm -rf *": "deny",
+      "rm -rf": "deny",
+      "git push --force*": "deny",
+      "git push -f*": "deny",
+      "git push *": "ask",
+      "git push": "ask",
+      "sudo *": "ask"
+    }
   }
 }

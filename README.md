@@ -26,7 +26,7 @@ What it installs
 | **fzf** | fuzzy finder + key-bindings/completion (`--all`) |
 | **lazygit** | git TUI, binary-only to `/usr/local/bin` (SHA256-verified) |
 | **configs** | deploys dotfiles from `conf/`; sets `EDITOR`/`VISUAL=nvim`; `.p10k.zsh` copied only if missing (`force: no`) |
-| **opencode** | opencode CLI to `~/.opencode/bin` (always-latest; self-skips when current) + syncs pre-saved `opencode.json`/`tui.json`/`dcp.jsonc`/`vibeguard.config.json` from `conf/opencode/` to `~/.config/opencode/`. Plugins: pty, oh-my-openagent, superpowers, dcp (compress limits 400k/100k), notifier, vibeguard (secret redaction), scheduler (cron jobs), goal-plugin (`/goal` auto-continue). idealab API key reads `{file:~/.secrets/idealab.key}` — kept out of the repo |
+| **opencode** | opencode CLI to `~/.opencode/bin` (always-latest; self-skips when current) + syncs pre-saved `opencode.json`/`tui.json`/`dcp.jsonc`/`vibeguard.config.json`/`opencode-notifier.json` from `conf/opencode/` to `~/.config/opencode/`. Plugins: pty, oh-my-openagent, superpowers, dcp (compress limits 400k/100k), notifier (desktop/sound alerts, `showSessionTitle` + subagent events enabled), vibeguard (secret redaction), scheduler (cron jobs), goal-plugin (`/goal` auto-continue). `opencode.json` sets `permission.bash` (allow by default for pty_spawn interactivity; denies `rm -rf`/force-push; asks for `git push`/`sudo`). idealab API key reads `{file:~/.secrets/idealab.key}` — kept out of the repo |
 | **shell** | sets login shell to `/bin/zsh` |
 
 Run a subset with tags (one tag per role): `--tags neovim,fzf`.

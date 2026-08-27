@@ -1,0 +1,11 @@
+{
+  "showSessionTitle": true,
+  "suppressWhenFocused": true,
+  "events": {
+    "complete": { "sound": true, "notification": true },
+    "subagent_complete": { "sound": true, "notification": true },
+    "error": { "sound": true, "notification": true },
+    "question": { "sound": true, "notification": true },
+    "user_cancelled": { "sound": true, "notification": true }
+  }
+}
