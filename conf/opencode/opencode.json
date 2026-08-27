@@ -41,13 +41,10 @@
   "permission": {
     "bash": {
       "*": "allow",
-      "rm -rf *": "deny",
-      "rm -rf": "deny",
-      "git push --force*": "deny",
-      "git push -f*": "deny",
-      "git push *": "ask",
-      "git push": "ask",
-      "sudo *": "ask"
+      "rm -rf *": "ask",
+      "rm -rf": "ask",
+      "git push --force*": "ask",
+      "git push -f*": "ask"
     }
   }
 }
