@@ -1,6 +1,13 @@
 # Modern CLI tools installed via binary download (not in apt or faster than cargo).
 # apt-installable tools (bat, eza, jq, btop, direnv, gh) are in the packages role.
 
+- name: Ensure ~/.local/bin exists
+  ansible.builtin.file:
+    path: '{{ ansible_facts.user_dir }}/.local/bin'
+    state: directory
+    mode: '0755'
+  tags: [tools]
+
 # --- batcat symlink (Ubuntu/Debian names the bat binary 'batcat') ---
 - name: Symlink batcat to bat (Ubuntu quirk)
   ansible.builtin.shell: |
@@ -47,7 +54,7 @@
 - name: Install zoxide binary
   ansible.builtin.copy:
     src: /tmp/zoxide_extract/zoxide
-    dest: '{{ ansible_env.HOME }}/.local/bin/zoxide'
+    dest: '{{ ansible_facts.user_dir }}/.local/bin/zoxide'
     mode: '0755'
     remote_src: yes
   tags: [tools]
@@ -76,8 +83,8 @@
 
 - name: Install dust binary
   ansible.builtin.copy:
-    src: /tmp/dust_extract/dust
-    dest: '{{ ansible_env.HOME }}/.local/bin/dust'
+    src: /tmp/dust_extract/dust-v1.2.5-x86_64-unknown-linux-gnu/dust
+    dest: '{{ ansible_facts.user_dir }}/.local/bin/dust'
     mode: '0755'
     remote_src: yes
   tags: [tools]
@@ -118,7 +125,7 @@
   ansible.builtin.shell: |
     curl -LsSf https://astral.sh/uv/install.sh | sh
   args:
-    creates: '{{ ansible_env.HOME }}/.local/bin/uv'
+    creates: '{{ ansible_facts.user_dir }}/.local/bin/uv'
   environment:
-    UV_INSTALL_DIR: '{{ ansible_env.HOME }}/.local/bin'
+    UV_INSTALL_DIR: '{{ ansible_facts.user_dir }}/.local/bin'
   tags: [tools]

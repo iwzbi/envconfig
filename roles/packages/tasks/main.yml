@@ -14,5 +14,11 @@
       - ripgrep
       - fd-find
       - lsof
+      - bat
+      - eza
+      - jq
+      - btop
+      - direnv
+      - gh
     state: present
   tags: [packages]

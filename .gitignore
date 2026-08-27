@@ -1,0 +1,4 @@
+.venv/
+.omo/
+session-ses_*.md
+__pycache__/

@@ -8,17 +8,17 @@
 - name: Install nvm
   ansible.builtin.shell: /tmp/install_nvm.sh
   args:
-    creates: '{{ ansible_user_dir }}/.nvm/nvm.sh'
+    creates: '{{ ansible_facts.user_dir }}/.nvm/nvm.sh'
   tags: [nodejs]
 
 - name: Install Node.js via nvm
   ansible.builtin.shell: |
-    source {{ ansible_user_dir }}/.nvm/nvm.sh
+    source {{ ansible_facts.user_dir }}/.nvm/nvm.sh
     nvm install 22
   args:
     executable: /bin/bash
   environment:
-    NVM_DIR: '{{ ansible_user_dir }}/.nvm'
+    NVM_DIR: '{{ ansible_facts.user_dir }}/.nvm'
   register: node_install
   changed_when: "'is already installed' not in (node_install.stdout ~ node_install.stderr)"
   tags: [nodejs]

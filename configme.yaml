@@ -3,12 +3,14 @@
   connection: local
   roles:
     - packages
+    - tools
     - nodejs
     - neovim
     - ohmyzsh
     - astrovim
     - fzf
     - lazygit
+    - tmux-plugins
     - configs
     - opencode
     - shell

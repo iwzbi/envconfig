@@ -6,7 +6,7 @@ if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]
 fi
 
 # If you come from bash you might have to change your $PATH.
-export PATH=$HOME/bin:$HOME/.local/bin:/usr/local/bin:$HOME/.opencode/bin:$PATH
+export PATH=$HOME/bin:$HOME/.local/bin:/usr/local/bin:$HOME/.opencode/bin:$HOME/.cargo/bin:$PATH
 
 # Path to your Oh My Zsh installation.
 export ZSH="$HOME/.oh-my-zsh"
@@ -33,7 +33,7 @@ ZSH_THEME="powerlevel10k/powerlevel10k"
 
 # Uncomment the following line to use hyphen-insensitive completion.
 # Case-sensitive completion must be off. _ and - will be interchangeable.
-# HYPHEN_INSENSITIVE="true"
+# HYPHEN_INSITIVE="true"
 
 # Uncomment one of the following lines to change the auto-update behavior
 # zstyle ':omz:update' mode disabled  # disable automatic updates
@@ -67,7 +67,7 @@ ZSH_THEME="powerlevel10k/powerlevel10k"
 # DISABLE_UNTRACKED_FILES_DIRTY="true"
 
 # Uncomment the following line if you want to change the command execution time
-# stamp shown in the history command output.
+# timestamp shown in the history command output.
 # You can set one of the optional three formats:
 # "mm/dd/yyyy"|"dd.mm.yyyy"|"yyyy-mm-dd"
 # or set a custom format using the strftime function format specifications,
@@ -98,6 +98,7 @@ source $ZSH/oh-my-zsh.sh
 # Preferred editor for local and remote sessions (for opencode /export, etc.)
 export EDITOR='nvim'
 export VISUAL='nvim'
+export SUDO_EDITOR='nvim'
 
 # Compilation flags
 # export ARCHFLAGS="-arch $(uname -m)"
@@ -130,3 +131,51 @@ export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
 [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
 
+# ==============================================================================
+# Modern CLI tools
+# ==============================================================================
+
+# zoxide — smarter cd (replaces autojump, uses 'z' instead of 'j')
+if command -v zoxide &> /dev/null; then
+  eval "$(zoxide init zsh)"
+fi
+
+# direnv — directory-specific environment variables
+if command -v direnv &> /dev/null; then
+  eval "$(direnv hook zsh)"
+fi
+
+# fzf — better fuzzy finder configuration
+export FZF_DEFAULT_COMMAND='fd --type f --hidden --follow --exclude .git'
+export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
+export FZF_DEFAULT_OPTS='--height 40% --layout=reverse --border --inline-info'
+
+# bat — syntax-highlighted cat replacement
+export BAT_THEME='Dracula'
+
+# ==============================================================================
+# Aliases
+# ==============================================================================
+
+# eza — modern ls with colors, icons, git status
+alias ls='eza --icons --git'
+alias ll='eza -l --icons --git'
+alias la='eza -la --icons --git'
+alias lt='eza --tree --icons --level=2'
+alias lh='eza -la --icons --git --group-directories-first'
+
+# bat — syntax-highlighted cat
+alias cat='bat --paging=never'
+alias b='bat --paging=never'
+
+# git shortcuts (complement ohmyzsh git plugin)
+alias gd='git diff'
+alias gdc='git diff --cached'
+alias gs='git status -sb'
+alias gl='git log --oneline --graph --decorate -20'
+
+# tools
+alias lg='lazygit'
+alias ld='lazydocker'
+alias du='dust -r'    # dust — modern du with tree view
+alias top='btop'       # btop — modern system monitor
