@@ -2,14 +2,10 @@ FROM ubuntu:24.04
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Enable the 'universe' apt component. The 'packages' role installs
-# 'autojump', which lives in universe; the stock ubuntu:24.04 image ships
-# only 'main'. Adding a separate DEB822 sources file keeps this codename-agnostic.
-RUN . /etc/os-release \
-  && printf 'Types: deb\nURIs: http://archive.ubuntu.com/ubuntu/\nSuites: %s %s-updates %s-security\nComponents: universe\nSigned-By: /usr/share/keyrings/ubuntu-archive-keyring.gpg\n' \
-     "$VERSION_CODENAME" "$VERSION_CODENAME" "$VERSION_CODENAME" \
-     > /etc/apt/sources.list.d/universe.sources \
-  && apt-get update \
+# The stock ubuntu:24.04 image already includes the 'universe' component
+# (Components: main universe restricted multiverse in ubuntu.sources),
+# so 'autojump' from the 'packages' role is available without extra config.
+RUN apt-get update \
   && apt-get install -y --no-install-recommends \
        python3 python3-venv python3-pip \
        sudo git curl wget ca-certificates openssh-client \

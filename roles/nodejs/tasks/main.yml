@@ -20,5 +20,5 @@
   environment:
     NVM_DIR: '{{ ansible_env.HOME }}/.nvm'
   register: node_install
-  changed_when: "'is already installed' not in node_install.stdout"
+  changed_when: "'is already installed' not in (node_install.stdout ~ node_install.stderr)"
   tags: [nodejs]
