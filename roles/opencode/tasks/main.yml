@@ -1,0 +1,14 @@
+- name: Download opencode install script
+  ansible.builtin.get_url:
+    url: https://opencode.ai/install
+    dest: /tmp/install_opencode.sh
+    mode: '0755'
+  tags: [opencode]
+
+- name: Install opencode (always latest, skips when current)
+  ansible.builtin.shell: /tmp/install_opencode.sh --no-modify-path
+  environment:
+    PATH: '{{ ansible_env.HOME }}/.opencode/bin:{{ ansible_env.PATH }}'
+  register: opencode_install
+  changed_when: "'already installed' not in opencode_install.stdout"
+  tags: [opencode]
