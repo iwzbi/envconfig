@@ -1,16 +1,12 @@
-- name: Download opencode install script
-  ansible.builtin.get_url:
-    url: https://opencode.ai/install
-    dest: /tmp/install_opencode.sh
-    mode: '0755'
-  tags: [opencode]
-
-- name: Install opencode (always latest, skips when current)
-  ansible.builtin.shell: /tmp/install_opencode.sh --no-modify-path
-  environment:
-    PATH: '{{ ansible_facts.env.HOME }}/.opencode/bin:{{ ansible_facts.env.PATH }}'
+- name: Install opencode via npm (always latest, skips when current)
+  ansible.builtin.shell: |
+    source {{ ansible_facts.user_dir }}/.nvm/nvm.sh
+    nvm use {{ node_major }}
+    npm install -g opencode-ai@latest
+  args:
+    executable: /bin/bash
   register: opencode_install
-  changed_when: "'already installed' not in opencode_install.stdout"
+  changed_when: "'added' in opencode_install.stdout"
   tags: [opencode]
 
 - name: Find pre-saved opencode config files
