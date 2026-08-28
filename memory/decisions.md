@@ -204,3 +204,32 @@ order.
 **Consequence:** The `gh`-as-completion-script failure mode is closed for every
 tool, and CI green no longer masks the bug because correctness no longer depends
 on `find` order.
+
+## D013 — github_binary tasks tagged `always` (dynamic-include tag filter)
+
+**Date:** 2026-08-28
+**Context:** The `tools` role installs each GitHub binary via a dynamic
+`include_role: github_binary`, and the caller task is tagged with every tool
+name so `--tags <tool>` (and `--tags tools`) selects it — the documented
+per-tool install path (see the comment in `roles/tools/tasks/linux.yml`). But
+Ansible filters a dynamic include's INNER tasks by their OWN tags: under
+`--tags gh`, the caller's `include_role` ran (tagged `gh`) yet the
+`github_binary` role's tasks — untagged — were filtered out, so nothing
+downloaded or installed. `./install.sh --tags gh` silently did nothing
+(`changed=0`) for the very tool it was asked to install. This affected every
+github_binary tool (gh, delta, zoxide, …), and combined with the D012
+completion-file bug meant a broken `gh` could not be repaired via
+`--tags gh`.
+**Decision:** Every task in `roles/github_binary/tasks/main.yml` carries
+`tags: always`. `always` defeats the `--tags` filter for those tasks, so they
+run whenever the `include_role` that loads them runs — restoring per-tool
+`--tags <tool>` selection. It does NOT override `when`: the caller's
+version-mismatch `when` still gates whether the include runs at all, and each
+task's own `when` (e.g. `github_binary_download.changed`) still applies. Safe
+under `--skip-tags tools` because the caller (tagged `tools`) is filtered out
+first, so the inner tasks are never reached.
+**Consequence:** `./install.sh --tags <tool>` now actually installs/upgrades
+that single tool on an existing machine (idempotent via the version check), as
+the README's `--tags neovim,fzf` examples imply. `always` is a strong tag —
+future maintainers must not strip it (the per-tool tag contract depends on it);
+the inline comment in the role explains why.

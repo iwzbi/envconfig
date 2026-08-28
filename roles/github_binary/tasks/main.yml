@@ -9,6 +9,17 @@
 # Idempotent: the caller gates this on a version check, so it only runs when
 # the tool is missing or at a different version. get_url's checksum makes the
 # download idempotent within a run.
+#
+# Every task carries `tags: always` (D013): this role is loaded via a dynamic
+# include_role whose caller is tagged with each tool name so `--tags <tool>`
+# selects it. But Ansible filters a dynamic include's INNER tasks by their own
+# tags — without `always`, untagged inner tasks are skipped under
+# `--tags <tool>` and the binary never installs (only the caller's
+# version-check ran; `./install.sh --tags gh` silently did nothing). `always`
+# defeats the `--tags` filter so the tasks run whenever the include that loads
+# them runs, restoring the documented per-tool `--tags <tool>` selection. It
+# does NOT override `when`: the caller's version-mismatch `when` still gates
+# whether the include runs at all, and each task's own `when` still applies.
 
 - name: Resolve install settings ({{ github_binary_tool.name }})
   ansible.builtin.set_fact:
@@ -16,6 +27,7 @@
     github_binary_become: "{{ (github_binary_tool.dest | default('user')) == 'system' }}"
     github_binary_file: "/tmp/{{ github_binary_tool.name }}-{{ github_binary_tool.version }}.asset"
     github_binary_extract: "/tmp/{{ github_binary_tool.name }}-{{ github_binary_tool.version }}_extract"
+  tags: always
 
 - name: Ensure install directory exists
   ansible.builtin.file:
@@ -23,6 +35,7 @@
     state: directory
     mode: "0755"
   become: "{{ github_binary_become }}"
+  tags: always
 
 - name: Download release ({{ github_binary_tool.name ~ "-" ~ github_binary_tool.version }})
   ansible.builtin.get_url:
@@ -31,6 +44,7 @@
     checksum: "sha256:{{ github_binary_tool.sha256 }}"
     mode: "0644"
   register: github_binary_download
+  tags: always
 
 - name: Create extract directory ({{ github_binary_tool.name }})
   ansible.builtin.file:
@@ -38,11 +52,13 @@
     state: directory
     mode: "0755"
   when: github_binary_download.changed
+  tags: always
 
 - name: Extract .deb ({{ github_binary_tool.name }})
   ansible.builtin.command: "dpkg-deb -x {{ github_binary_file }} {{ github_binary_extract }}"
   when: github_binary_tool.type == 'deb' and github_binary_download.changed
   changed_when: true
+  tags: always
 
 - name: Extract archive ({{ github_binary_tool.name }})
   ansible.builtin.unarchive:
@@ -50,6 +66,7 @@
     dest: "{{ github_binary_extract }}"
     remote_src: true
   when: github_binary_tool.type != 'deb' and github_binary_download.changed
+  tags: always
 
 - name: Install binaries ({{ github_binary_tool.name }})
   ansible.builtin.shell: |
@@ -73,3 +90,4 @@
   become: "{{ github_binary_become }}"
   when: github_binary_download.changed
   changed_when: true
+  tags: always
