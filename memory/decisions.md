@@ -233,3 +233,35 @@ that single tool on an existing machine (idempotent via the version check), as
 the README's `--tags neovim,fzf` examples imply. `always` is a strong tag —
 future maintainers must not strip it (the per-tool tag contract depends on it);
 the inline comment in the role explains why.
+
+## D014 — drop the nvm-era `~/.npmrc` global prefix under mise
+
+**Date:** 2026-08-28
+**Context:** A leftover `~/.npmrc` with `prefix=${HOME}/.npm-global` (the
+standard sudo-free-global pattern from the nvm / system-node era) silently
+breaks npm-global CLIs under mise. The `opencode` role runs
+`~/.local/bin/mise exec -- npm install -g opencode-ai@latest`; npm honors
+`~/.npmrc`, so the install is diverted to `~/.npm-global/bin/` — **outside**
+mise's managed node tree. `mise activate` only shims binaries inside mise's
+runtimes, and `conf/.zshrc` does not add `~/.npm-global/bin` to PATH, so the
+just-installed `opencode` is nowhere on PATH (`command not found`). This is
+invisible during the playbook (the install reports success) and surfaces only at
+the shell. It was masked under nvm because a user's nvm-era `.zshrc` carried
+an explicit `export PATH="$HOME/.npm-global/bin:$PATH"` alongside the prefix;
+the mise migration overwrites `.zshrc` (configs role, D002) and drops that
+export, so the CLI vanishes on the next `./install.sh`.
+**Decision:** Under mise, remove any `prefix=` line from `~/.npmrc`
+(`npm config delete prefix`, or edit the file). mise installs node
+**user-local** (`~/.local/share/mise/installs/node/<ver>/`), so
+`npm install -g` is already sudo-free without a custom prefix — the workaround
+is obsolete. With no prefix, `mise exec -- npm -g` installs into mise's node
+global bin, which `mise activate zsh` puts on PATH: CLIs like `opencode`
+resolve automatically and mise manages their upgrades. The `opencode` role needs
+no code change — it already does the right thing once the prefix is gone.
+**Consequence:** Existing `~/.npm-global` globals (e.g. `openclaw`) become
+orphans — still on disk but no longer on PATH; reinstall them into mise
+(`mise exec -- npm install -g <pkg>`) or accept the loss. Users who insist on
+keeping the `~/.npm-global` pattern must add `~/.npm-global/bin` to PATH
+themselves in a file the configs role will not overwrite; `conf/.zshrc` has no
+`~/.zshrc.local` sourcing today, so a plain `export >> ~/.zshrc` is wiped on
+the next re-run (it lands in `~/.zshrc.standup.bak`, unreferenced).

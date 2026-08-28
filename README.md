@@ -334,3 +334,12 @@ Moved to [memory/known-issues.md](memory/known-issues.md). Highlights:
   and Alt-C still work) — see [D008](memory/decisions.md#d008).
 - **bat on Ubuntu**: the `bat` apt package installs the binary as
   `batcat`; the `tools` role symlinks `/usr/local/bin/bat -> /usr/bin/batcat`.
+- **migrating from nvm with a `~/.npmrc` prefix** (Linux/macOS): a leftover
+  `prefix=${HOME}/.npm-global` line (the sudo-free-global pattern from the
+  nvm/system-node era) diverts `mise exec -- npm -g` installs — e.g.
+  `opencode` — out of mise's shimmed tree into `~/.npm-global/bin`, which is
+  neither on `conf/.zshrc`'s PATH nor shimmed by `mise activate`, so the CLI
+  vanishes (`command not found`) after re-running `./install.sh`. Remove the
+  line (`npm config delete prefix`); mise installs node user-local, so
+  `npm -g` is already sudo-free, and CLIs then land in mise's node bin and
+  resolve automatically. See [D014](memory/decisions.md#d014).
