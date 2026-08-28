@@ -342,4 +342,7 @@ Moved to [memory/known-issues.md](memory/known-issues.md). Highlights:
   vanishes (`command not found`) after re-running `./install.sh`. Remove the
   line (`npm config delete prefix`); mise installs node user-local, so
   `npm -g` is already sudo-free, and CLIs then land in mise's node bin and
-  resolve automatically. See [D014](memory/decisions.md#d014).
+  resolve automatically. See [D014](memory/decisions.md#d014). The playbook
+  now also auto-warns at start (preflight grep of `~/.npmrc`) and fails fast
+  post-install if `opencode` resolves outside mise's node tree — see
+  [D015](memory/decisions.md#d015).

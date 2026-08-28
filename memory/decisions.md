@@ -265,3 +265,42 @@ keeping the `~/.npm-global` pattern must add `~/.npm-global/bin` to PATH
 themselves in a file the configs role will not overwrite; `conf/.zshrc` has no
 `~/.zshrc.local` sourcing today, so a plain `export >> ~/.zshrc` is wiped on
 the next re-run (it lands in `~/.zshrc.standup.bak`, unreferenced).
+
+## D015 — guard npm-global installs against the `~/.npmrc` prefix trap
+
+**Date:** 2026-08-28
+**Context:** D014 documented that a leftover `~/.npmrc` `prefix=` silently
+diverts `mise exec -- npm -g` out of mise's node tree, but the breakage stays
+SILENT during the playbook: the install reports success (exit 0), and even
+when mise does install correctly, a stale `~/.npm-global/bin/<cli>` symlink
+plus an old `export PATH="$HOME/.npm-global/bin"` line in `.zshrc` can shadow
+mise's binary. This is exactly the user-visible failure that surfaced this
+decision: `which opencode` pointed at the dead symlink (`~/.npm-global/bin/`
+opencode) even though mise had a correct copy — because `~/.npm-global/bin`
+sat ahead of mise's node bin on PATH. The playbook had no signal anything
+was wrong; the user only discovered it when the CLI failed at the shell.
+**Decision:** Add two non-destructive guards that convert the silent failure
+into a loud, actionable one — without touching the user's `~/.npmrc`:
+- **L1 preflight** (`configme.yaml` `pre_tasks`, tagged `always` so it runs on
+  every invocation including `--tags <tool>` — without `always` it would be
+  skipped under tag subsets, the D013 dynamic-include filter in reverse):
+  grep `~/.npmrc` for a `prefix=` line and emit a warning naming the trap and
+  the one-line fix (`npm config delete prefix`). Covers all current and future
+  npm packages project-wide — any future npm role runs after this preflight.
+- **L3 post-install verify** (`roles/opencode/tasks/main.yml`): after the
+  install, resolve the CLI through mise (`mise exec -- which opencode`) and
+  assert the result lives under `~/.local/share/mise/`; otherwise `fail` with
+  both root causes (diverted install OR shadowing symlink) and the four-step
+  remediation. Catches the shadowing case the prefix grep cannot.
+Rejected **L2** (a prefix-immune install via
+`mise exec -- npm install -g --prefix="$(mise where node)" ...`): it would
+force the install into mise's tree regardless of `~/.npmrc`, but npm's
+`--prefix` semantics for `-g` have edge cases needing separate validation,
+and L1+L3 already turn the silent failure into a loud+actionable one — the
+actual win. L2 can be added later if "zero-config just works" becomes a goal.
+**Consequence:** Users hitting this trap now get (a) an up-front warning at
+playbook start and (b) a hard fail at the opencode step with exact fix steps,
+instead of a silently broken CLI discovered later at the shell. The guards
+are non-destructive (no `~/.npmrc` editing — that remains a user decision per
+D014). Future npm packages inherit L1 automatically and should add their own
+L3-style post-install verify against the mise prefix.
