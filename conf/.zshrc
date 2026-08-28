@@ -21,7 +21,6 @@ export ZSH="$HOME/.oh-my-zsh"
 # to know which specific one was loaded, run: echo $RANDOM_THEME
 # See https://github.com/ohmyzsh/ohmyzsh/wiki/Themes
 # ZSH_THEME="agnoster"
-POWERLEVEL9K_MODE='nerdfont-complete'
 # POWERLEVEL9K_PROMPT_ON_NEWLINE=false
 # POWERLEVEL9K_MULTILINE_LAST_PROMPT_PREFIX="╰▸ "
 POWERLEVEL9K_LEFT_PROMPT_ELEMENTS=(os_icon dir vcs)
@@ -87,13 +86,20 @@ ZSH_THEME="powerlevel10k/powerlevel10k"
 # Custom plugins may be added to $ZSH_CUSTOM/plugins/
 # Example format: plugins=(rails git textmate ruby lighthouse)
 # Add wisely, as too many plugins slow down shell startup.
-plugins=(git extract macos zsh-syntax-highlighting zsh-autosuggestions autojump)
+plugins=(git extract macos zsh-autosuggestions zsh-syntax-highlighting)
 
 ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE='fg=#999999'
 
 source $ZSH/oh-my-zsh.sh
 
 # User configuration
+
+HISTSIZE=50000
+SAVEHIST=50000
+setopt EXTENDED_HISTORY HIST_IGNORE_ALL_DUPS HIST_IGNORE_SPACE HIST_VERIFY
+setopt AUTO_CD EXTENDED_GLOB INTERACTIVE_COMMENTS
+WORDCHARS=""
+hash -d code=$HOME/code
 
 # export MANPATH="/usr/local/man:$MANPATH"
 
@@ -130,9 +136,7 @@ else
   export LANG=C.UTF-8
 fi
 
-[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
-for _aj in /usr/share/autojump/autojump.sh /etc/profile.d/autojump.sh /opt/homebrew/etc/profile.d/autojump.sh "$HOME/.autojump/etc/profile.d/autojump.sh"; do [[ -s "$_aj" ]] && source "$_aj" && break; done
-autoload -U compinit && compinit -u
+command -v fzf &> /dev/null && eval "$(fzf --zsh)"
 [[ -d /usr/local/cuda/bin ]] && PATH=$PATH:/usr/local/cuda/bin
 
 # To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
@@ -155,6 +159,7 @@ fi
 # zoxide — smarter cd (replaces autojump, uses 'z' instead of 'j')
 if command -v zoxide &> /dev/null; then
   eval "$(zoxide init zsh)"
+  alias j='z'
 fi
 
 # direnv — directory-specific environment variables
@@ -182,7 +187,7 @@ alias lt='eza --tree --icons --level=2'
 alias lh='eza -lah --icons --git --color-scale all --group-directories-first --time-style long-iso --smart-group --binary'
 
 # bat — syntax-highlighted cat
-alias cat='bat --paging=never'
+alias cat='bat -pp'
 alias b='bat --paging=never'
 
 # git shortcuts (complement ohmyzsh git plugin)
