@@ -11,6 +11,13 @@
 # fetches the SAME installer via its stable GitHub URL. No version pin or arch
 # detection is needed (the installer handles both), and it lands in
 # ~/.local/bin/mise exactly like the primary path.
+#
+# The installer's binary fetch is a SEPARATE layer: install.sh defaults
+# to downloading the mise tarball from mise.jdx.dev (same host family as
+# mise.run → also 403'd in a red zone), and only uses github.com when
+# MISE_INSTALL_FROM_GITHUB=1. We set that env on both install tasks so the
+# binary — not just the installer script — is pulled from the reachable
+# github.com.
 
 - name: Install mise (mise.run, with GitHub-direct fallback)
   block:
@@ -26,6 +33,8 @@
       ansible.builtin.command: /tmp/mise-install.sh
       args:
         creates: "{{ ansible_facts.user_dir }}/.local/bin/mise"
+      environment:
+        MISE_INSTALL_FROM_GITHUB: "1"
       tags: [mise]
   rescue:
     - name: Download mise installer (GitHub direct fallback, D016)
@@ -40,6 +49,8 @@
       ansible.builtin.command: /tmp/mise-install.sh
       args:
         creates: "{{ ansible_facts.user_dir }}/.local/bin/mise"
+      environment:
+        MISE_INSTALL_FROM_GITHUB: "1"
       tags: [mise]
 
 - name: Check installed node via mise
