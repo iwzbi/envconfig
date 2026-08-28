@@ -45,7 +45,7 @@ github_tools:
     sha256: "ea4f0222950ee750a3d38dd80d03bce4cee07a3f63928fc47548383bcaf23093"
     url: "https://github.com/dandavison/delta/releases/download/{version}/git-delta_{version}_amd64.deb"
     type: deb
-    dest: system
+    dest: user
     brew: git-delta
   - name: zoxide
     version: "0.10.0"
@@ -70,7 +70,7 @@ github_tools:
     sha256: "0d9dbfc26068b218e7ed84b104748cadc6e3cf733c0afd35465306fb39b9523c"
     url: "https://github.com/jesseduffield/lazydocker/releases/download/v{version}/lazydocker_{version}_Linux_x86_64.tar.gz"
     type: archive
-    dest: system
+    dest: user
   - name: yazi
     version: "26.8.15"
     sha256: "a6702034790afcdbb546b73b288c9b184a751fa3f2f17f0ad4d26fc302fb8d45"
@@ -98,5 +98,5 @@ github_tools:
     sha256: "f65a3fa2fa0eb2e97c445ee3f5e087a40aae03b64847f45a8f13805e504535d6"
     url: "https://github.com/cli/cli/releases/download/v{version}/gh_{version}_linux_amd64.deb"
     type: deb
-    dest: system
+    dest: user
     brew: gh

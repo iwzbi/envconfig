@@ -92,3 +92,23 @@ or use `--tags tools`).
 history.
 **Decision:** `.zshrc` sources fzf first, then `atuin init zsh` later —
 atuin wins Ctrl-R. fzf's Ctrl-T (file find) and Alt-C (cd) still work.
+
+## D009 — sudo minimization (binaries install user-local)
+
+**Date:** 2026-08-28
+**Context:** Several tools were installed to system paths (/usr/local/bin,
+/opt) which forced `become: true` (sudo). On machines where the user lacks
+passwordless sudo, the playbook hung or failed mid-run.
+**Decision:** All GitHub binaries (delta, zoxide, eza, dust, lazydocker,
+yazi, glow, atuin, gh, lazygit) and neovim install **user-local** under
+`~/.local/bin` / `~/.local/...` — no sudo. `.deb` assets (delta, gh) are
+extracted with `dpkg-deb -x` (NOT `apt install`) so we get the binary without
+root or system-package metadata. The batcat→bat symlink lives in
+`~/.local/bin`, not `/usr/local/bin`.
+**Consequence:** The only `become: true` tasks left are: the `packages` role
+(apt system packages + the `/etc/apt/apt.conf.d/99no-proxy` config — apt
+config fundamentally needs root) and the `shell` role (`chsh` needs root to
+change the login shell without an interactive password prompt). apt system
+packages and chsh are irreducibly root on Debian/Ubuntu; everything else is
+user-local. On a machine WITHOUT sudo, the user must still run apt + chsh by
+hand (or have sudo for just those).

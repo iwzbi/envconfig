@@ -119,8 +119,8 @@ export SUDO_EDITOR='nvim'
 # Example aliases
 # alias zshconfig="mate ~/.zshrc"
 # alias ohmyzsh="mate ~/.oh-my-zsh"
-# Neovim from /opt (Linux only; on macOS brew puts nvim on PATH already).
-[[ -d /opt/nvim-linux-x86_64/bin ]] && export PATH="$PATH:/opt/nvim-linux-x86_64/bin"
+# Neovim from ~/.local (Linux only; on macOS brew puts nvim on PATH already).
+[[ -d "$HOME/.local/nvim-linux-x86_64/bin" ]] && export PATH="$PATH:$HOME/.local/nvim-linux-x86_64/bin"
 alias vim=nvim
 if [[ "$OSTYPE" == darwin* ]]; then
   export LC_ALL=en_US.UTF-8

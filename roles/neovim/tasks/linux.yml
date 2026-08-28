@@ -1,5 +1,14 @@
-# Neovim pinned to /opt (sha256-verified). get_url's checksum makes the
-# download idempotent; remove+unarchive only run when the download changed.
+# Neovim pinned (sha256-verified), extracted user-local to ~/.local — no sudo
+# (D009). The tarball extracts to nvim-linux-x86_64/bin/nvim; conf/.zshrc adds
+# ~/.local/nvim-linux-x86_64/bin to PATH (guarded). get_url's checksum makes
+# the download idempotent; remove+unarchive only run when the download changed.
+- name: Ensure ~/.local exists
+  ansible.builtin.file:
+    path: "{{ ansible_facts.user_dir }}/.local"
+    state: directory
+    mode: "0755"
+  tags: [neovim]
+
 - name: Download neovim v{{ neovim_version }}
   ansible.builtin.get_url:
     url: "https://github.com/neovim/neovim/releases/download/v{{ neovim_version }}/nvim-linux-x86_64.tar.gz"
@@ -9,19 +18,17 @@
   register: neovim_download
   tags: [neovim]
 
-- name: Remove old neovim installation
-  become: true
+- name: Remove old user-local neovim installation
   ansible.builtin.file:
-    path: /opt/nvim-linux-x86_64
+    path: "{{ ansible_facts.user_dir }}/.local/nvim-linux-x86_64"
     state: absent
   when: neovim_download.changed
   tags: [neovim]
 
-- name: Unarchive neovim
-  become: true
+- name: Unarchive neovim to ~/.local
   ansible.builtin.unarchive:
     src: "/tmp/nvim-v{{ neovim_version }}.tar.gz"
-    dest: /opt
+    dest: "{{ ansible_facts.user_dir }}/.local"
     remote_src: true
   when: neovim_download.changed
   tags: [neovim]

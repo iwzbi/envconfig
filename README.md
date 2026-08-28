@@ -14,9 +14,9 @@ Prerequisites
 -------------
 - **Linux**: Ubuntu 22.04 or 24.04 (or compatible Debian). `autojump` needs
   the `universe` apt component (enabled by default on stock Ubuntu). `sudo`
-  access (for system packages; the binary tools install user-local where
-  possible). `gh` is installed from its GitHub `.deb` (not apt) so it works
-  on 22.04, where it isn't in the default archives.
+  is needed only for apt system packages + `chsh`; all CLI binaries install
+  user-local to `~/.local` (no sudo — see D009). `gh` is installed from its
+  GitHub `.deb` (not apt) so it works on 22.04, where it isn't in the archives.
 - **macOS**: Apple Silicon (arm64). `install.sh` installs Homebrew on first
   run (the only step that needs your password; once per machine).
 - Nothing else — `install.sh` bootstraps `uv` (which installs Ansible) itself.
@@ -50,7 +50,7 @@ What it installs
 | **packages** | apt: zsh, git, tmux, ripgrep, fd-find, autojump, cargo, vim, curl, wget, unzip, lsof, bat, jq, btop, direnv | brew: git, curl, wget, tmux, autojump, ripgrep, fd, bat, jq, btop, direnv, gh |
 | **tools** | sha256-verified GitHub binaries: delta, zoxide, eza, dust, lazydocker, **yazi, glow, atuin, gh**; uv via install script; batcat→bat symlink | brew: git-delta, zoxide, eza, dust, lazydocker, yazi, glow, atuin, gh |
 | **mise** | `mise.run` + `mise use -g node@22` (replaces nvm) | same (single code path) |
-| **neovim** | nvim v0.11.0 to `/opt` (SHA256-verified) | brew neovim |
+| **neovim** | nvim v0.11.0 to `~/.local` (SHA256-verified, no sudo) | brew neovim |
 | **ohmyzsh** | Oh My Zsh + Powerlevel10k + syntax-highlighting + autosuggestions (idempotent git update) | same |
 | **astrovim** | MyAstroNvim config to `~/.config/nvim` (force: yes — repo is authoritative) | same |
 | **fzf** | git clone + `install --all` | same |

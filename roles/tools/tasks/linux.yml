@@ -4,9 +4,8 @@
 # batcat->bat symlink handles the Ubuntu naming quirk. uv via install script
 # (creates guard) as a guarantee for users who bypass install.sh.
 
-- name: Symlink batcat to bat (Ubuntu quirk)
-  ansible.builtin.shell: '[ -f /usr/bin/batcat ] && ln -sf /usr/bin/batcat /usr/local/bin/bat || true'
-  become: true
+- name: Symlink batcat to bat (Ubuntu quirk, user-local — no sudo)
+  ansible.builtin.shell: '[ -f /usr/bin/batcat ] && ln -sf /usr/bin/batcat {{ ansible_facts.user_dir }}/.local/bin/bat || true'
   changed_when: false
   tags: [tools]
 
