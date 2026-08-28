@@ -90,6 +90,12 @@ smoke atuin       atuin --version
 smoke gh          gh --version
 smoke fzf         fzf --version
 
+# age: crypto backend for the passage secret store (D017).
+smoke age         age --version
+# passage refuses to run ANY subcommand (even --version) until ~/.passage/identities
+# exists, so CI (no identity) cannot invoke it -- prove it is installed & on PATH instead.
+smoke passage     command -v passage
+
 # --- installer-managed ---
 smoke uv      uv --version
 smoke mise    mise --version

@@ -46,5 +46,6 @@
     - lazygit
     - tmux-plugins
     - configs
+    - passage
     - opencode
     - shell

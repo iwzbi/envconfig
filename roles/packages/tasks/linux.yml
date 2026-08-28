@@ -64,6 +64,7 @@
       - jq
       - btop
       - direnv
+      - tree  # passage ls/find needs it (D017)
       - pipx  # uv red-zone fallback when astral.sh is unreachable (D011)
     state: present
   tags: [packages]

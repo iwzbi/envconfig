@@ -1,0 +1,150 @@
+# passage — local-first secret store (age-encrypted, git-synced). Replaces the
+# manual `printf > ~/.secrets/idealab.key` step documented in the README (D017).
+#
+# age (crypto backend) + passage script land in ~/.local/bin. The STORE lives
+# at ~/.passage/store (a git repo synced to a PRIVATE remote — public repos
+# leak secret names/metadata). The age IDENTITY at ~/.passage/identities is the
+# private key — NEVER committed; it is distributed out-of-band to each machine
+# (one-time copy per machine — the local-first trust model's only manual step).
+#
+# CI runs without an identity: the role detects that and prints bootstrap
+# instructions instead of failing (the playbook's "run twice" idempotency gate
+# must not break). Secret materialization is gated on the store being ready,
+# so a fresh/CI machine simply skips it — opencode runs keyless, as before.
+
+- name: Ensure ~/.local/bin exists
+  ansible.builtin.file:
+    path: "{{ ansible_facts.user_dir }}/.local/bin"
+    state: directory
+    mode: "0755"
+  tags: [passage]
+
+- name: Install passage script (pinned commit, sha256-verified)
+  ansible.builtin.get_url:
+    url: "https://raw.githubusercontent.com/FiloSottile/passage/{{ passage_version_commit }}/src/password-store.sh"
+    dest: "{{ ansible_facts.user_dir }}/.local/bin/passage"
+    checksum: "sha256:{{ passage_sha256 }}"
+    mode: "0755"
+  tags: [passage]
+
+- name: Ensure ~/.passage exists (the store dir is created on clone below)
+  ansible.builtin.file:
+    path: "{{ ansible_facts.user_dir }}/.passage"
+    state: directory
+    mode: "0700"
+  tags: [passage]
+
+- name: Does the age identity exist on this machine?
+  ansible.builtin.stat:
+    path: "{{ ansible_facts.user_dir }}/.passage/identities"
+  register: passage_identity
+  changed_when: false
+  tags: [passage]
+
+- name: Is the store already a git repo?
+  ansible.builtin.stat:
+    path: "{{ ansible_facts.user_dir }}/.passage/store/.git"
+  register: passage_store_git
+  changed_when: false
+  tags: [passage]
+
+# Branch A: fresh machine, no identity yet -> bootstrap instructions. Never
+# fails: CI and brand-new machines land here. changed_when: false keeps the
+# second playbook run (idempotency gate) clean.
+- name: Show one-time bootstrap instructions (no identity found)
+  ansible.builtin.debug:
+    msg: |
+      passage: no ~/.passage/identities found — the secret store is not set up
+      on this machine yet. One-time bootstrap (see README "Secret store"):
+
+        1. Create a PRIVATE git repo:  gh repo create secrets --private
+        2. On your FIRST machine only:
+             mkdir -p ~/.passage/store
+             age-keygen -o ~/.passage/identities                                   # the age private key (NEVER commit)
+             age-keygen -y ~/.passage/identities >> ~/.passage/store/.age-recipients   # its public key
+             passage insert idealab/api-key                                       # paste the idealab API key
+             cd ~/.passage/store && git init -b main && git add -A && git commit -m "init secrets"
+             git remote add origin {{ passage_store_remote or 'https://github.com/you/secrets.git' }}
+             git push -u origin main
+        3. On every OTHER machine: copy ~/.passage/identities here (scp/USB),
+           set `passage_store_remote` in configme.yaml, and re-run ./install.sh
+           — the role below clones the store and materializes ~/.secrets/*.
+
+      The identity file IS the private key — protect it like an SSH key and
+      never commit it (the store only ever holds encrypted .age files).
+  when: not passage_identity.stat.exists
+  changed_when: false
+  tags: [passage]
+
+# Branch B/C: identity present + remote configured -> the git module clones the
+# store if absent, or pulls if already cloned (idempotent: reports changed only
+# on real new commits, unlike a blind `changed_when: false` pull that masks
+# updates). When the remote is empty, this is skipped and the remind below fires.
+- name: Clone or sync the encrypted store from the private remote
+  ansible.builtin.git:
+    repo: "{{ passage_store_remote }}"
+    dest: "{{ ansible_facts.user_dir }}/.passage/store"
+    update: true
+  when: >-
+    passage_identity.stat.exists
+    and (passage_store_remote | default('') | length > 0)
+  tags: [passage]
+
+- name: Remind to set passage_store_remote (identity present, store not synced)
+  ansible.builtin.debug:
+    msg: >-
+      passage: identity found but the store is not cloned and
+      `passage_store_remote` is empty. Set it in configme.yaml to your private
+      repo URL (e.g. "https://github.com/you/secrets.git") and re-run ./install.sh.
+  when: >-
+    passage_identity.stat.exists
+    and not passage_store_git.stat.exists
+    and (passage_store_remote | default('') | length == 0)
+  changed_when: false
+  tags: [passage]
+
+# Re-check readiness AFTER clone/sync: a stat taken at playbook start is stale
+# on the run that first clones the store (passage_store_git was false then), so
+# materialization would wrongly skip on that run. Gate materialization on this
+# fresh stat instead.
+- name: Re-check whether the store is ready (post clone/sync)
+  ansible.builtin.stat:
+    path: "{{ ansible_facts.user_dir }}/.passage/store/.git"
+  register: passage_store_ready
+  changed_when: false
+  tags: [passage]
+
+- name: Ensure ~/.secrets exists
+  ansible.builtin.file:
+    path: "{{ ansible_facts.user_dir }}/.secrets"
+    state: directory
+    mode: "0700"
+  tags: [passage]
+
+# Materialize each mapped secret to disk; opencode/{file:...} reads it. Skipped
+# silently (exit 0) when the entry does not exist in the store yet. Only writes
+# when content changed -> idempotent under the "run twice" gate.
+- name: Materialize secrets from the store to ~/.secrets
+  ansible.builtin.shell: |
+    set -o pipefail
+    tmp=$(mktemp)
+    if ! "{{ ansible_facts.user_dir }}/.local/bin/passage" show "{{ item.passage_path }}" > "$tmp" 2>/dev/null; then
+      rm -f "$tmp"
+      exit 0
+    fi
+    if [ -f "{{ item.dest }}" ] && cmp -s "$tmp" "{{ item.dest }}"; then
+      rm -f "$tmp"
+    else
+      install -m {{ item.mode | default('0600') }} "$tmp" "{{ item.dest }}"
+      echo changed
+    fi
+    rm -f "$tmp"
+  args:
+    executable: /bin/bash
+  loop: "{{ passage_materialize | default([]) }}"
+  loop_control:
+    label: "{{ item.passage_path }} -> {{ item.dest }}"
+  when: passage_identity.stat.exists and passage_store_ready.stat.exists
+  register: passage_materialize_out
+  changed_when: "'changed' in (passage_materialize_out.stdout | default(''))"
+  tags: [passage]

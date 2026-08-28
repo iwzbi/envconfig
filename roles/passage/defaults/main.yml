@@ -1,0 +1,30 @@
+# passage — local-first secret store backed by age, synced over a private git
+# remote. Replaces the manual `~/.secrets/idealab.key` step (D017). See
+# tasks/main.yml for the bootstrap flow and the chicken-and-egg identity model.
+#
+# passage is installed as a single shell script (pinned to an upstream commit,
+# sha256-verified — passage ships no GitHub releases). age (the crypto backend)
+# is installed by the `tools` role via vars/versions.yml :: github_tools (Linux)
+# / brew (macOS).
+
+# Upstream commit of FiloSottile/passage the installed script is pinned to.
+# To bump: pick a new commit, recompute `passage_sha256` of
+#   https://raw.githubusercontent.com/FiloSottile/passage/<commit>/src/password-store.sh
+# and update both. No releases -> no auto-bump (unlike github_tools entries).
+passage_version_commit: "4e4c5ae14be91833791d45608f50868175c1490f"
+passage_sha256: "1a6394cb946fe469c2a6c4442cbaa2d0d144e09a43ea3d98ad92d482685cbb29"
+
+# PRIVATE git remote holding the encrypted .age store. Default is the standup
+# owner's repo (this is a personal dotfiles repo); forkers set their own. Leave
+# empty on a fresh machine that has no ~/.passage/identities yet — the role
+# prints the one-time bootstrap instructions instead of failing (D017).
+passage_store_remote: "https://github.com/iwzbi/secrets.git"
+
+# Map passage entries -> on-disk files materialized each run (only when the
+# store is unlocked). opencode reads {file:~/.secrets/idealab.key} from
+# conf/opencode/opencode.json, so that path is the canonical default. Add more
+# rows as your secret set grows (e.g. a GitHub token -> ~/.config/gh/hosts.yml).
+passage_materialize:
+  - passage_path: "idealab/api-key"
+    dest: "{{ ansible_facts.user_dir }}/.secrets/idealab.key"
+    mode: "0600"

@@ -339,3 +339,57 @@ mirroring the uv air-gapped escape hatch (D011). The fallback is sha256-less,
 matching `mise.run` itself (the installer verifies its own download); the
 project's sha256-verified-binary discipline (D009) is preserved for the
 `github_binary` path, which this does not touch.
+
+## D017 — passage + age as the local-first secret store (replaces manual ~/.secrets/idealab.key)
+
+**Date:** 2026-08-28
+**Context:** The opencode provider key was written by hand per machine
+(`printf > ~/.secrets/idealab.key`, documented in the README) — unmanaged,
+un-synced, and the obvious thing to centralize. GitHub Actions Secrets were
+rejected: they are write-only outside a workflow run (`gh secret` has no `get`),
+so they cannot be fetched onto a personal dev machine running `install.sh`.
+Cloud SaaS secret managers (1Password, Doppler, Bitwarden) were considered and
+rejected: 1Password is paid; the requirement was strictly free. The remaining
+free + cloud-synced + retrievable + most-secure-trust-model option is a
+local-first store: client-side encrypted with age, synced over a private git
+remote — no vendor to trust with plaintext. gopass+age was considered but
+rejected: its age backend is officially "experimental" (on-disk format may
+change) and `gopass setup --crypto age` silently encrypts new secrets to an
+auto-generated soft key alongside the intended recipient — a security footgun
+that defeats the threat model this route was chosen for. passage (FiloSottile's
+fork of pass using age) has neither issue: no experimental label, explicit
+recipient control via `.age-recipients`, and it is authored by age's creator.
+**Decision:** Install passage (pinned-commit shell script, sha256-verified) +
+age (via `github_tools` on Linux, brew on macOS) in a new `passage` role that:
+(1) ensures `~/.passage` exists; (2) detects whether `~/.passage/identities`
+(the age private key) is present — if not, prints one-time bootstrap
+instructions instead of failing (CI and fresh machines land here; the playbook
+"run twice" idempotency gate must not break); (3) if present + remote
+configured, clones/syncs the encrypted store from a private git remote; (4)
+materializes mapped secrets (default `idealab/api-key -> ~/.secrets/idealab.key`)
+to disk so `conf/opencode/opencode.json`'s existing
+`{file:~/.secrets/idealab.key}` keeps working unchanged. The identity file is
+distributed out-of-band (one copy per machine) — the local-first model's only
+manual step, accepted as the cost of zero cloud trust. passage over gopass for
+the experimental-label + soft-key reasons above; age (not GPG) for the cleanest
+crypto (X25519 + ChaCha20-Poly1305, no algorithm-agility footgun). YubiKey
+(age-plugin-yubikey) was considered as the strongest hardware-backed path but
+rejected — it is paid hardware; the requirement was strictly free. passage has
+no `init` command (the dispatch case is vestigial — `cmd_init` is referenced but
+never defined), so bootstrap is explicit: `age-keygen` the identity, append its
+public key to `~/.passage/store/.age-recipients`, `passage insert`, then raw
+`git init`/push — see README "Secret store".
+**Consequence:** Secrets now live encrypted in a private git repo (one place,
+versioned, free) and are materialized onto each machine automatically once the
+age identity is copied there. The identity file is the single sensitive artifact
+to protect/back up — losing it with no backup recipient makes the store
+unrecoverable (document a second recipient in practice). The default identity
+is unencrypted (no passphrase) so the role can run non-interactively; this is
+safe only if the identity file is protected like an SSH private key. The store
+remote is empty by default — users set `passage_store_remote` in configme.yaml
+after creating their private repo. CI stays green: no identity -> bootstrap
+message (no failure), materialization skipped. `passage --version` is unusable
+in CI (the script exits 1 before any subcommand when `~/.passage/identities` is
+absent), so `bin/smoke-test.sh` checks passage via `command -v` instead.
+age is manually bumped (no `auto:`) — stable crypto tool, rarely needing
+updates.

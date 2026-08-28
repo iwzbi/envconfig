@@ -57,6 +57,7 @@ What it installs
 | **lazygit** | binary to `/usr/local/bin` (SHA256-verified) | brew lazygit |
 | **tmux-plugins** | tpm + tmux-resurrect + tmux-continuum | same |
 | **configs** | deploys `.zshrc`, `.tmux.conf`, `.gitconfig` from `conf/` (with `backup: yes`); `.p10k.zsh` only if missing | same |
+| **passage** | installs `passage` (pinned script) + `age`; clones/syncs the age-encrypted secret store from a private git remote; materializes `~/.secrets/*` (e.g. the opencode API key) — see [Secret store](#secret-store-passage--age), D017 | same |
 | **opencode** | npm `-g opencode-ai@latest` via `mise exec`; syncs `conf/opencode/` → `~/.config/opencode/` | same |
 | **shell** | `chsh -s /bin/zsh` | no-op (zsh is default on macOS) |
 
@@ -235,15 +236,40 @@ git config --file ~/.gitconfig.local user.name "Your Name"
 git config --file ~/.gitconfig.local user.email "you@example.com"
 ```
 
-opencode API key
-----------------
+Secret store (passage + age)
+---------------------------
 `conf/opencode/opencode.json` reads the API key from
-`{file:~/.secrets/idealab.key}` (kept out of this public repo).
-One-time per machine:
-```bash
-mkdir -p ~/.secrets && printf '%s' 'YOUR_KEY' > ~/.secrets/idealab.key && chmod 600 ~/.secrets/idealab.key
-```
-Without it, opencode runs but the idealab provider has no key.
+`{file:~/.secrets/idealab.key}`. That file is now materialized automatically
+from a local-first **passage** store (age-encrypted, synced over a private git
+remote) instead of being written by hand (D017). passage has no `init` command,
+so bootstrap is explicit. One-time setup:
+
+1. Create a **private** git repo (the store holds encrypted `.age` files only,
+   but a public repo leaks secret *names*):
+   ```bash
+   gh repo create secrets --private
+   ```
+2. On your **first** machine:
+   ```bash
+   mkdir -p ~/.passage/store
+   age-keygen -o ~/.passage/identities                                       # the age private key (NEVER commit)
+   age-keygen -y ~/.passage/identities >> ~/.passage/store/.age-recipients   # its public key
+   passage insert idealab/api-key                                           # paste the idealab API key
+   cd ~/.passage/store && git init -b main && git add -A && git commit -m "init secrets"
+   git remote add origin https://github.com/you/secrets.git
+   git push -u origin main
+   ```
+3. On every **other** machine: copy `~/.passage/identities` here (scp/USB — it's
+   the decryption key), set `passage_store_remote` in `configme.yaml` to your
+   private repo URL, and re-run `./install.sh`. The `passage` role clones the
+   store and writes `~/.secrets/idealab.key` (and any other mapped secrets)
+   automatically.
+
+Without the store set up, opencode runs but the idealab provider has no key
+(same as before) — no failure. The identity file IS the private key: protect it
+like an SSH key and never commit it (only the encrypted store is pushed). Back
+it up (or add a second key to `.age-recipients` as a recovery recipient) —
+losing it with no recovery recipient makes the store unrecoverable.
 
 Project memory
 --------------
