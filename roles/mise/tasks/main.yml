@@ -26,7 +26,6 @@
       ansible.builtin.command: /tmp/mise-install.sh
       args:
         creates: "{{ ansible_facts.user_dir }}/.local/bin/mise"
-      when: mise_installer.changed
       tags: [mise]
   rescue:
     - name: Download mise installer (GitHub direct fallback, D016)
@@ -41,7 +40,6 @@
       ansible.builtin.command: /tmp/mise-install.sh
       args:
         creates: "{{ ansible_facts.user_dir }}/.local/bin/mise"
-      when: mise_installer.changed
       tags: [mise]
 
 - name: Check installed node via mise
