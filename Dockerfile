@@ -26,14 +26,18 @@ RUN useradd -m -s /bin/bash tester \
 WORKDIR /opt/envconfig
 COPY . .
 
-# Install uv (same installer the 'tools' role uses on a real host) and sync the
-# project environment from pyproject.toml + uv.lock. uv manages its own Python,
-# but system python3 is kept for ansible's apt module (needs python3-apt, which
-# ships with the ubuntu:24.04 base). chown last so tester owns the venv too.
+# uv is installed as root (to /root/.local); copy the self-contained binary
+# to a shared path so the runtime user 'tester' can execute it (a symlink into
+# /root would be unreadable once USER switches away from root). Then run uv
+# sync AS tester — so the venv and any uv-managed Python land under tester's
+# home (readable at runtime) instead of /root (mode 700, unreadable by tester).
+# This avoids the "bad interpreter: Permission denied" trap on 22.04, where
+# the system python (3.10) is too old (project needs >=3.12) so uv downloads a
+# managed CPython — if that download lands under /root, tester can't run it.
 RUN curl -LsSf https://astral.sh/uv/install.sh | sh \
-  && ln -sf /root/.local/bin/uv /usr/local/bin/uv \
-  && uv sync \
-  && chown -R tester:tester /opt/envconfig
+  && cp /root/.local/bin/uv /usr/local/bin/uv \
+  && chown -R tester:tester /opt/envconfig \
+  && runuser -u tester -- sh -c 'export HOME=/home/tester && cd /opt/envconfig && uv sync'
 
 USER tester
 ENV PATH="/opt/envconfig/.venv/bin:$PATH"

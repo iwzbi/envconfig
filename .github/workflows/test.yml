@@ -28,12 +28,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: docker build --build-arg BASE_IMAGE=ubuntu:${{ matrix.base }} -t envconfig-test-${{ matrix.base }} .
-      - name: Run playbook twice (idempotency gate)
+      - name: Run playbook twice + smoke-test installed tools
         run: |
           docker run --rm envconfig-test-${{ matrix.base }} bash -lc '
             ansible-playbook configme.yaml &&
             echo "=== second run: idempotency check ===" &&
-            ansible-playbook configme.yaml'
+            ansible-playbook configme.yaml &&
+            echo "=== smoke test: do the tools actually run? ===" &&
+            bin/smoke-test.sh'
 
   # macOS (Apple Silicon): install.sh already handles brew+uv bootstrap.
   # Run twice — second run must not fail. Validates the macOS path and
@@ -43,8 +45,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v5
-      - name: Run install.sh twice (idempotency gate)
+      - name: Run install.sh twice + smoke-test installed tools
         run: |
           ./install.sh
           echo "=== second run: idempotency check ==="
           ./install.sh
+          echo "=== smoke test: do the tools actually run? ==="
+          bin/smoke-test.sh

@@ -176,7 +176,7 @@ export BAT_THEME='Dracula'
 
 # eza — modern ls with colors, icons, git status
 alias ls='eza --icons --git'
-alias ll='eza -l --icons --git'
+alias ll='eza -l --icons --git --color-scale all --group-directories-first'
 alias la='eza -la --icons --git'
 alias lt='eza --tree --icons --level=2'
 alias lh='eza -la --icons --git --group-directories-first'

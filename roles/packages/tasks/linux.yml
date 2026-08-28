@@ -3,11 +3,24 @@
 # is absent from 22.04's default archives, so it is installed from its GitHub
 # .deb by the `tools` role (see vars/versions.yml :: github_tools).
 #
-# Proxy bypass: many corporate proxies 403 on Ubuntu apt mirrors. This drops
-# /etc/apt/apt.conf.d/99no-proxy so apt ignores http_proxy/https_proxy env and
-# goes direct to the mirrors (which are usually reachable even when the proxy
-# is needed for GitHub/PyPI). Idempotent: a copy with unchanged content is ok.
-- name: Bypass proxy for apt (corporate proxies often 403 on Ubuntu mirrors)
+# Proxy bypass: corporate proxies often 403 on Ubuntu apt mirrors. WHEN a proxy
+# is configured in the environment, drop /etc/apt/apt.conf.d/99no-proxy so apt
+# ignores it and goes direct to the mirrors (usually reachable even when the
+# proxy is needed for GitHub/PyPI). When NO proxy is configured, apt goes
+# direct anyway — so we REMOVE the bypass rather than leave a stale file that
+# would override a user's intentional apt-proxy config. The file tracks the
+# current environment on each run.
+- name: Determine whether a proxy is configured
+  ansible.builtin.set_fact:
+    packages_proxy_configured: >-
+      {{ (lookup('ansible.builtin.env', 'http_proxy') | length > 0)
+       or (lookup('ansible.builtin.env', 'https_proxy') | length > 0)
+       or (lookup('ansible.builtin.env', 'HTTP_PROXY') | length > 0)
+       or (lookup('ansible.builtin.env', 'HTTPS_PROXY') | length > 0) }}
+  tags: [packages]
+
+- name: Bypass proxy for apt when a proxy is configured
+  become: true
   ansible.builtin.copy:
     dest: /etc/apt/apt.conf.d/99no-proxy
     content: |
@@ -16,7 +29,15 @@
     mode: "0644"
     owner: root
     group: root
+  when: packages_proxy_configured
+  tags: [packages]
+
+- name: Remove stale apt proxy bypass when no proxy is configured
   become: true
+  ansible.builtin.file:
+    path: /etc/apt/apt.conf.d/99no-proxy
+    state: absent
+  when: not packages_proxy_configured
   tags: [packages]
 
 - name: Install apt packages
