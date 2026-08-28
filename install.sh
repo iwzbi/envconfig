@@ -56,9 +56,34 @@ fi
 cd "$REPO_DIR"
 
 # --- ensure uv (Python package manager; installs ansible) ---
+# Astral's install script is the primary path. In a restricted network ("red
+# zone") where astral.sh is unreachable, fall back per OS: Homebrew on macOS
+# (brew is already ensured above), pipx on Linux (apt installs pipx, which is
+# also a system package in the `packages` role; needs PyPI reachable). Both
+# land uv in ~/.local/bin, so PATH and the `tools` role's stat-gate stay
+# consistent. See memory/decisions.md D011.
 if ! command -v uv >/dev/null 2>&1; then
   log "Installing uv"
-  curl -LsSf https://astral.sh/uv/install.sh | sh
+  if curl -LsSf --max-time 20 https://astral.sh/uv/install.sh -o /tmp/uv-install.sh; then
+    sh /tmp/uv-install.sh
+  else
+    warn "astral.sh unreachable — falling back to OS package manager (D011)"
+    case "$(uname -s)" in
+      Darwin)
+        brew install uv
+        ;;
+      Linux)
+        if ! command -v pipx >/dev/null 2>&1; then
+          sudo apt-get install -y pipx
+        fi
+        pipx install uv
+        ;;
+      *)
+        printf '!! Unsupported OS for uv fallback: %s\n' "$(uname -s)" >&2
+        exit 1
+        ;;
+    esac
+  fi
   export PATH="$HOME/.local/bin:$PATH"
 fi
 
