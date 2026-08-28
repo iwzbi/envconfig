@@ -1,4 +1,4 @@
-# Managed by ansible (envconfig). User-specific settings (name, email, etc.)
+# Managed by ansible (standup). User-specific settings (name, email, etc.)
 # go in ~/.gitconfig.local — not managed, won't be overwritten.
 [init]
     defaultBranch = main
@@ -6,18 +6,31 @@
 [pull]
     rebase = true
 
+[rebase]
+    autoStash = true
+
+[rerere]
+    enabled = true
+
 [push]
     autoSetupRemote = true
     default = current
 
+[fetch]
+    prune = true
+    pruneTags = true
+
 [diff]
     colorMoved = default
+    algorithm = histogram
 
 [merge]
     conflictstyle = diff3
 
 [core]
     pager = delta
+    fsmonitor = true
+    untrackedcache = true
 
 [interactive]
     diffFilter = delta --color-only
@@ -27,6 +40,18 @@
     side-by-side = true
     line-numbers = true
     syntax-theme = Dracula
+
+[commit]
+    verbose = true
+
+[branch]
+    sort = -committerdate
+
+[help]
+    autocorrect = prompt
+
+[log]
+    date = iso-strict
 
 # Include user-specific config (name, email, tokens) — not managed by ansible.
 [include]
