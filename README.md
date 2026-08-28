@@ -9,7 +9,9 @@ Prerequisites
 -------------
 - **Ubuntu 24.04** (or compatible Debian). The `autojump` package requires
   the `universe` apt component — enabled by default on stock Ubuntu.
-- **Python 3** + `pip` (for installing Ansible).
+- **uv** (Python package manager) — installs Ansible and manages the project
+  environment. Install it with `curl -LsSf https://astral.sh/uv/install.sh | sh`
+  (one-time per machine).
 - **sudo** access (several roles use `become: yes` for system-level tasks).
 
 Quick Start
@@ -17,8 +19,8 @@ Quick Start
 ```bash
 git clone https://github.com/iwzbi/envconfig.git
 cd envconfig
-python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
-.venv/bin/ansible-playbook configme.yaml
+curl -LsSf https://astral.sh/uv/install.sh | sh   # install uv (once per machine)
+uv run ansible-playbook configme.yaml
 ```
 Then `source ~/.zshrc` (or restart your terminal).
 
@@ -202,7 +204,7 @@ the command line (it would make all tasks run as root, installing
 user-level tools like nvm/fzf/opencode into `/root/` instead of `~`).
 
 ### Behind a proxy
-If your network requires a proxy for GitHub/pip but the proxy 403s on
+If your network requires a proxy for GitHub/uv but the proxy 403s on
 Ubuntu apt archives (common in corporate environments), build with:
 ```bash
 docker build \
@@ -211,7 +213,7 @@ docker build \
   -t envconfig-test .
 ```
 The Dockerfile sets `Acquire::http::Proxy "DIRECT"` so apt bypasses the
-proxy and connects directly to Ubuntu mirrors, while pip/git/curl still
+proxy and connects directly to Ubuntu mirrors, while uv/git/curl still
 use the proxy env vars.
 
 When running the container, pass proxy env vars and configure git:
