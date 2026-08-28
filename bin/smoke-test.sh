@@ -49,6 +49,34 @@ smoke node    node --version
 # --- neovim (THE key sentinel: prebuilt binary that may mismatch the host glibc) ---
 smoke nvim    nvim --version
 
+# --- neovim config-load check (beyond --version): does AstroNvim LOAD cleanly? ---
+# --version only proves the binary runs; a nvim bump that breaks the config at
+# startup (removed/renamed Lua API -> E5108, plugin load error) surfaces only
+# when the config actually loads. Warmup runs a lazy.nvim sync so plugins are
+# installed before the check (fresh containers clone the config but never run
+# nvim, so plugins aren't installed yet). Caveat: catches STARTUP errors only;
+# a plugin that breaks only when USED (not at load) slips through.
+nvim_config_load() {
+  [ -d "$HOME/.config/nvim" ] || { printf '  skip  nvim-config (no ~/.config/nvim)\n'; return 0; }
+  # warmup: install/sync AstroNvim plugins via lazy.nvim, then sleep so the
+  # async clones finish. Best-effort — ignore output + rc (network may be slow).
+  nvim --headless "+Lazy sync" "+sleep 20" "+qa!" >/dev/null 2>&1 || true
+  # load config, let lazy.nvim settle 5s, capture all output. nvim may exit 0
+  # even with startup errors, so we grep the output rather than trust rc.
+  local out
+  out=$(nvim --headless "+lua vim.defer_fn(function() vim.cmd('qa!') end, 5000)" 2>&1 || true)
+  if [ -z "$out" ]; then
+    printf '  skip  nvim-config (no output — likely missing runtime, not a config error)\n'
+  elif printf '%s\n' "$out" | grep -iqE 'E5[0-9]+:|error detected|traceback'; then
+    printf '  FAIL  nvim-config (startup errors in config load)\n' >&2
+    printf '%s\n' "$out" | grep -iE 'E5[0-9]+:|error detected|traceback' | head -5 >&2
+    fails=$((fails + 1))
+  else
+    printf '  ok    nvim-config (AstroNvim loads headless, no errors)\n'
+  fi
+}
+nvim_config_load
+
 # --- GitHub-release binaries (linux: ~/.local/bin; macOS: brew) ---
 smoke delta       delta --version
 smoke zoxide      zoxide --version

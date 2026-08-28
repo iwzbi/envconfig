@@ -7,9 +7,14 @@
 #   macOS uses Homebrew, which is UNPINNED by design (follows `brew upgrade`),
 #   so brew-managed tools have no entries here — see memory/decisions.md D001.
 #
-# Bump a tool:   uv run python bin/bump-version.py <tool> <new-version>
+# Bump a tool:    uv run python bin/bump-version.py <tool> <new-version>
 #   (downloads the asset, computes sha256, updates this file in place)
-# Add a tool:    append to github_tools below + add the formula to
+# Discover+bump:  uv run python bin/bump-version.py --latest <tool>
+#   (queries the GitHub releases/latest API, then bumps that one tool)
+# Bump all auto:  uv run python bin/bump-version.py --latest-all
+#   (bumps every github_tools entry with `auto: true` to its latest release;
+#    used by the weekly .github/workflows/bump.yml CI — see memory/decisions.md)
+# Add a tool:     append to github_tools below + add the formula to
 #   roles/tools/tasks/darwin.yml (if the brew name differs, set `brew:`)
 # =============================================================================
 
@@ -40,6 +45,10 @@ lazygit_sha256: "84682f4ad5a449d0a3ffbc8332200fe8651aee9dd91dcd8d87197ba6c2450db
 #   dest      user (~/.local/bin, no sudo) | system (/usr/local/bin, sudo)
 #   binaries  optional list of binaries to install from the archive (default [name])
 #   brew      optional Homebrew formula name if it differs from `name`
+#   auto      optional true — safe to auto-bump in the weekly CI. Only low
+#             compat-risk tools get this (zoxide/dust/eza/glow/lazydocker/gh).
+#             High-risk tools (neovim/atuin/yazi/delta/lazygit) OMIT it and are
+#             bumped manually after a human review (see memory/decisions.md D010).
 # -----------------------------------------------------------------------------
 github_tools:
   - name: delta
@@ -55,24 +64,28 @@ github_tools:
     url: "https://github.com/ajeetdsouza/zoxide/releases/download/v{version}/zoxide-{version}-x86_64-unknown-linux-musl.tar.gz"
     type: archive
     dest: user
+    auto: true
   - name: eza
     version: "0.23.5"
     sha256: "e06eebab74b73d6b7d51a796a353824b001bea82df077706382e100815d28904"
     url: "https://github.com/eza-community/eza/releases/download/v{version}/eza_x86_64-unknown-linux-musl.tar.gz"
     type: archive
     dest: user
+    auto: true
   - name: dust
     version: "1.2.5"
     sha256: "64b16f5c10cc4c25d2eaa144e9d2d44b3ed8f72ee63b3bc0a92c85e21e9e0932"
     url: "https://github.com/bootandy/dust/releases/download/v{version}/dust-v{version}-x86_64-unknown-linux-gnu.tar.gz"
     type: archive
     dest: user
+    auto: true
   - name: lazydocker
     version: "0.25.2"
     sha256: "0d9dbfc26068b218e7ed84b104748cadc6e3cf733c0afd35465306fb39b9523c"
     url: "https://github.com/jesseduffield/lazydocker/releases/download/v{version}/lazydocker_{version}_Linux_x86_64.tar.gz"
     type: archive
     dest: user
+    auto: true
   - name: yazi
     version: "26.8.15"
     sha256: "a6702034790afcdbb546b73b288c9b184a751fa3f2f17f0ad4d26fc302fb8d45"
@@ -86,6 +99,7 @@ github_tools:
     url: "https://github.com/charmbracelet/glow/releases/download/v{version}/glow_{version}_Linux_x86_64.tar.gz"
     type: archive
     dest: user
+    auto: true
   - name: atuin
     version: "18.20.1"
     sha256: "1ad3e8162b4570118a3e05ae6b9ca0575aad0bb018a83001805c4f52d4fe9c8f"
@@ -102,3 +116,4 @@ github_tools:
     type: deb
     dest: user
     brew: gh
+    auto: true

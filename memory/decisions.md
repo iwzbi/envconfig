@@ -112,3 +112,33 @@ change the login shell without an interactive password prompt). apt system
 packages and chsh are irreducibly root on Debian/Ubuntu; everything else is
 user-local. On a machine WITHOUT sudo, the user must still run apt + chsh by
 hand (or have sudo for just those).
+
+## D010 — weekly auto-bump CI bumps only low-risk tools
+
+**Date:** 2026-08-28
+**Context:** Versions are pinned for reproducibility, but bumping them by hand
+is tedious and easy to forget. The user wants the latest versions kept
+automatically, but a blanket auto-bump is unsafe for tools whose config/API
+breaks across versions.
+**Decision:** A weekly GitHub Actions workflow (`.github/workflows/bump.yml`,
+Monday 06:00 UTC) runs `bump-version.py --latest-all`, which bumps every
+github_tools entry marked `auto: true` to its latest GitHub release (downloads
+the asset, recomputes sha256, rewrites `vars/versions.yml`), then opens a PR.
+Only the 6 LOW compat-risk tools are `auto: true`: zoxide, dust, eza, glow,
+lazydocker, gh. High-risk tools (neovim — must match AstroNvim API; atuin —
+init/config schema breaks across majors; yazi — pre-1.0 plugin API evolves;
+delta — .gitconfig keys change across majors; lazygit — config format changed
+before) are NOT auto and are bumped manually with `bump-version.py --latest
+<tool>` after a human review.
+**Why not auto-bump everything:** the smoke test catches "binary runs" +
+"config loads headless" (the nvim functional check in `bin/smoke-test.sh`),
+but does NOT catch a plugin that breaks only when USED (headless load-only
+catches ~50% of real nvim-bump breakage). Auto-bumping neovim could ship a
+break that smoke misses. The low-risk 6 have stable interfaces and are
+empirically safe to float (the user's Mac already floats all of them via brew
+with no issues — D001).
+**Consequence:** The PR's own CI (`test.yml` on: pull_request) re-runs the full
+22.04/24.04/macos playbook×2 + smoke matrix on the bumped versions. Merge only
+if green. The weekly job itself does NOT run tests (no duplication — the PR
+triggers them). If a bumped version breaks CI, the PR stays red: investigate,
+don't merge.
