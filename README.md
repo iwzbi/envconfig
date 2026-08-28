@@ -1,4 +1,4 @@
-envconfig — Configure Your Workspace Once for All
+standup — Configure Your Workspace Once for All
 ================================================
 
 Automated development environment setup via Ansible. **One command** installs
@@ -25,12 +25,12 @@ Quick Start
 -----------
 ```bash
 # One command (bootstraps brew on macOS + uv on both, then runs the playbook):
-curl -LsSf https://raw.githubusercontent.com/iwzbi/envconfig/main/install.sh | sh
+curl -LsSf https://raw.githubusercontent.com/iwzbi/standup/main/install.sh | sh
 ```
 Or, from a clone:
 ```bash
-git clone https://github.com/iwzbi/envconfig.git
-cd envconfig
+git clone https://github.com/iwzbi/standup.git
+cd standup
 ./install.sh                      # add e.g. --tags neovim,fzf to run a subset
 ```
 Then `source ~/.zshrc` (or restart your terminal).
@@ -258,9 +258,9 @@ The `Dockerfile` builds an Ubuntu 24.04 image with Ansible pre-installed.
 The playbook runs at container time so each test starts from a clean machine.
 
 ```bash
-docker build -t envconfig-test .
-docker run --rm -it envconfig-test
-# Inside the container (cwd is /opt/envconfig, ansible on PATH):
+docker build -t standup-test .
+docker run --rm -it standup-test
+# Inside the container (cwd is /opt/standup, ansible on PATH):
 ansible-playbook configme.yaml --syntax-check
 ansible-lint
 ansible-playbook configme.yaml
@@ -282,7 +282,7 @@ Ubuntu apt archives (common in corporate environments), build with:
 docker build \
   --build-arg http_proxy=http://PROXY:PORT \
   --build-arg https_proxy=http://PROXY:PORT \
-  -t envconfig-test .
+  -t standup-test .
 ```
 The Dockerfile sets `Acquire::http::Proxy "DIRECT"` so apt bypasses the
 proxy and connects directly to Ubuntu mirrors, while uv/git/curl still
@@ -293,7 +293,7 @@ When running the container, pass proxy env vars and configure git:
 docker run --rm -it \
   -e http_proxy=http://PROXY:PORT \
   -e https_proxy=http://PROXY:PORT \
-  envconfig-test
+  standup-test
 # Inside: configure git proxy (root + tester)
 git config --global http.proxy http://PROXY:PORT
 sudo git config --global http.proxy http://PROXY:PORT

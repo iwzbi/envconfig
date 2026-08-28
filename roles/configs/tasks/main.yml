@@ -4,7 +4,7 @@
 #
 # Backup policy: instead of `backup: true` (which drops a timestamped
 # ~/.zshrc.1234~ on EVERY content change and accumulates forever), preserve
-# each pre-existing dotfile ONCE as ~/.zshrc.envconfig.bak — written only if
+# each pre-existing dotfile ONCE as ~/.zshrc.standup.bak — written only if
 # the original exists and no .bak exists yet. This protects a one-time
 # first-adoption overwrite without cluttering ~ on every re-run.
 - name: Find configuration files
@@ -18,7 +18,7 @@
 - name: Preserve pre-existing dotfiles (one-time backup, never accumulates)
   ansible.builtin.shell: |
     src="{{ ansible_facts.user_dir }}/{{ item.path | basename }}"
-    bak="{{ ansible_facts.user_dir }}/{{ item.path | basename }}.envconfig.bak"
+    bak="{{ ansible_facts.user_dir }}/{{ item.path | basename }}.standup.bak"
     [ -f "$src" ] && [ ! -f "$bak" ] && cp -a "$src" "$bak" || true
   args:
     executable: /bin/bash

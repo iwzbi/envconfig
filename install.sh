@@ -1,17 +1,17 @@
 #!/bin/sh
 # =============================================================================
-# envconfig — one-command setup. Works on macOS (Apple Silicon) and Linux.
+# standup — one-command setup. Works on macOS (Apple Silicon) and Linux.
 #
 #   ./install.sh [--tags neovim,fzf] [other ansible-playbook args]
-#   curl -LsSf https://raw.githubusercontent.com/iwzbi/envconfig/main/install.sh | sh
+#   curl -LsSf https://raw.githubusercontent.com/iwzbi/standup/main/install.sh | sh
 #
 # Idempotent: safe to re-run on an existing machine (upgrades/overwrites per
 # the playbook's idempotency design — see memory/decisions.md).
 # =============================================================================
 set -eu
 
-REPO_URL="https://github.com/iwzbi/envconfig.git"
-ENVCONFIG_DIR="${ENVCONFIG_DIR:-$HOME/code/envconfig}"
+REPO_URL="https://github.com/iwzbi/standup.git"
+STANDUP_DIR="${STANDUP_DIR:-$HOME/code/standup}"
 
 log() { printf '\033[1;32m==>\033[0m %s\n' "$*"; }
 warn() { printf '\033[1;33m!!\033[0m %s\n' "$*"; }
@@ -43,15 +43,15 @@ fi
 # --- locate or clone the repo ---
 if [ -f ./configme.yaml ]; then
   REPO_DIR="$(pwd)"
-elif [ -d "$ENVCONFIG_DIR/.git" ]; then
-  REPO_DIR="$ENVCONFIG_DIR"
+elif [ -d "$STANDUP_DIR/.git" ]; then
+  REPO_DIR="$STANDUP_DIR"
   log "Updating $REPO_DIR"
   git -C "$REPO_DIR" pull --ff-only
 else
-  log "Cloning $REPO_URL -> $ENVCONFIG_DIR"
-  mkdir -p "$(dirname "$ENVCONFIG_DIR")"
-  git clone "$REPO_URL" "$ENVCONFIG_DIR"
-  REPO_DIR="$ENVCONFIG_DIR"
+  log "Cloning $REPO_URL -> $STANDUP_DIR"
+  mkdir -p "$(dirname "$STANDUP_DIR")"
+  git clone "$REPO_URL" "$STANDUP_DIR"
+  REPO_DIR="$STANDUP_DIR"
 fi
 cd "$REPO_DIR"
 

@@ -1,4 +1,4 @@
-# envconfig — convenience targets. The real entry point is install.sh.
+# standup — convenience targets. The real entry point is install.sh.
 .PHONY: setup update lint test test-docker smoke
 
 # Full setup (installs uv/brew if missing, runs the whole playbook).
@@ -22,8 +22,8 @@ lint:
 test: test-docker
 
 test-docker:
-	docker build -t envconfig-test . && \
-	docker run --rm envconfig-test bash -lc '\
+	docker build -t standup-test . && \
+	docker run --rm standup-test bash -lc '\
 		ansible-playbook configme.yaml && \
 		echo "--- second run (idempotency check) ---" && \
 		ansible-playbook configme.yaml && \

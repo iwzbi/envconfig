@@ -1,5 +1,5 @@
 [project]
-name = "envconfig"
+name = "standup"
 version = "0.1.0"
 description = "Automated development environment setup via Ansible"
 readme = "README.md"

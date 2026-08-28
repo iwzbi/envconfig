@@ -23,7 +23,7 @@ RUN useradd -m -s /bin/bash tester \
   && echo 'tester ALL=(ALL) NOPASSWD:ALL' > /etc/sudoers.d/tester \
   && chmod 0440 /etc/sudoers.d/tester
 
-WORKDIR /opt/envconfig
+WORKDIR /opt/standup
 COPY . .
 
 # uv is installed as root (to /root/.local); copy the self-contained binary
@@ -36,11 +36,11 @@ COPY . .
 # managed CPython — if that download lands under /root, tester can't run it.
 RUN curl -LsSf https://astral.sh/uv/install.sh | sh \
   && cp /root/.local/bin/uv /usr/local/bin/uv \
-  && chown -R tester:tester /opt/envconfig \
-  && runuser -u tester -- sh -c 'export HOME=/home/tester && cd /opt/envconfig && uv sync'
+  && chown -R tester:tester /opt/standup \
+  && runuser -u tester -- sh -c 'export HOME=/home/tester && cd /opt/standup && uv sync'
 
 USER tester
-ENV PATH="/opt/envconfig/.venv/bin:$PATH"
+ENV PATH="/opt/standup/.venv/bin:$PATH"
 
 # Harness, not a baked result: drop into a shell and run the playbook at
 # container time so every test starts from a clean machine.

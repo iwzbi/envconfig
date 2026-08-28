@@ -1,5 +1,5 @@
 # =============================================================================
-# envconfig — centralized version manifest (single source of truth)
+# standup — centralized version manifest (single source of truth)
 # =============================================================================
 # Every pinned version in the playbook lives here.
 #
