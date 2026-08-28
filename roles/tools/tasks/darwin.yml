@@ -1,0 +1,21 @@
+# macOS: all CLI binaries via Homebrew (unpinned, follows `brew upgrade` —
+# see memory/decisions.md D001). Formula names: delta -> git-delta; rest match
+# the binary name. uv is intentionally NOT installed here on mac (install.sh
+# owns it on both platforms — D006) to avoid a dual install / PATH ambiguity.
+- name: Install CLI tools via Homebrew
+  community.general.homebrew:
+    name:
+      - git-delta
+      - zoxide
+      - eza
+      - dust
+      - lazydocker
+      - yazi
+      - glow
+      - atuin
+    state: present
+  environment:
+    PATH: "/opt/homebrew/bin:/usr/local/bin:{{ lookup('ansible.builtin.env', 'PATH') }}"
+    HOMEBREW_NO_AUTO_UPDATE: "1"
+    HOMEBREW_NO_ANALYTICS: "1"
+  tags: [tools]

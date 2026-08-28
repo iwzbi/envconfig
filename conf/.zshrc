@@ -5,6 +5,11 @@ if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]
   source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
 fi
 
+# Homebrew on Apple Silicon (macOS only). On Linux this guard is false.
+if [[ -x /opt/homebrew/bin/brew ]]; then
+  eval "$(/opt/homebrew/bin/brew shellenv)"
+fi
+
 # If you come from bash you might have to change your $PATH.
 export PATH=$HOME/bin:$HOME/.local/bin:/usr/local/bin:$HOME/.cargo/bin:$PATH
 
@@ -114,22 +119,34 @@ export SUDO_EDITOR='nvim'
 # Example aliases
 # alias zshconfig="mate ~/.zshrc"
 # alias ohmyzsh="mate ~/.oh-my-zsh"
-export PATH=$PATH:/opt/nvim-linux-x86_64/bin
+# Neovim from /opt (Linux only; on macOS brew puts nvim on PATH already).
+[[ -d /opt/nvim-linux-x86_64/bin ]] && export PATH="$PATH:/opt/nvim-linux-x86_64/bin"
 alias vim=nvim
-export LC_ALL=C.UTF-8
-export LANG=C.UTF-8
+if [[ "$OSTYPE" == darwin* ]]; then
+  export LC_ALL=en_US.UTF-8
+  export LANG=en_US.UTF-8
+else
+  export LC_ALL=C.UTF-8
+  export LANG=C.UTF-8
+fi
 
 [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
-for _aj in /usr/share/autojump/autojump.sh /etc/profile.d/autojump.sh $HOME/.autojump/etc/profile.d/autojump.sh; do [[ -s "$_aj" ]] && source "$_aj" && break; done
+for _aj in /usr/share/autojump/autojump.sh /etc/profile.d/autojump.sh /opt/homebrew/etc/profile.d/autojump.sh "$HOME/.autojump/etc/profile.d/autojump.sh"; do [[ -s "$_aj" ]] && source "$_aj" && break; done
 autoload -U compinit && compinit -u
 [[ -d /usr/local/cuda/bin ]] && PATH=$PATH:/usr/local/cuda/bin
 
 # To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
 
-export NVM_DIR="$HOME/.nvm"
-[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
-[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
+# mise — unified runtime version manager (replaces nvm; manages node etc.)
+if command -v mise &> /dev/null; then
+  eval "$(mise activate zsh)"
+fi
+
+# atuin — shell history with full-text search (takes over Ctrl-R from fzf)
+if command -v atuin &> /dev/null; then
+  eval "$(atuin init zsh)"
+fi
 
 # ==============================================================================
 # Modern CLI tools

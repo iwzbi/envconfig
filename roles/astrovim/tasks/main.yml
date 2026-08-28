@@ -1,6 +1,11 @@
+# force: yes makes this rerunnable (D002): on re-run it fast-forwards to the
+# remote tip and discards any local nvim config edits — ~/.config/nvim is
+# authoritative-sourced from the MyAstroNvim repo, mirroring the configs role.
+# If you keep local nvim tweaks, fork MyAstroNvim and point this repo at it.
 - name: Clone AstroNvim config
   ansible.builtin.git:
     repo: https://github.com/iwzbi/MyAstroNvim.git
     dest: '{{ ansible_facts.user_dir }}/.config/nvim'
     depth: 1
+    force: true
   tags: [astrovim]

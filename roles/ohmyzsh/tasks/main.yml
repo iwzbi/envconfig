@@ -1,31 +1,32 @@
-- name: Remove old Oh My Zsh directory
-  ansible.builtin.file:
-    path: '{{ ansible_facts.user_dir }}/.oh-my-zsh'
-    state: absent
-  tags: [ohmyzsh]
+# Oh My Zsh + Powerlevel10k + syntax-highlighting + autosuggestions.
+#
+# Idempotent (D005): clone-or-update via the git module with force: true, which
+# discards any local modifications and fast-forwards to the remote tip. The omz
+# install script is no longer used — it just cloned the repo, copied a .zshrc
+# (we deploy our own via the configs role), and ran chsh (the shell role does
+# that). So a direct git clone is equivalent and rerunnable. The old role did
+# `rm -rf ~/.oh-my-zsh` every run, which wiped custom/ — that conflicted with
+# the idempotency requirement and is now gone.
 
-- name: Download Oh My Zsh installation script
-  ansible.builtin.get_url:
-    url: 'https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh'
-    dest: '/tmp/install_oh_my_zsh.sh'
-    mode: '0755'
-  tags: [ohmyzsh]
-
-- name: Run Oh My Zsh installation
-  ansible.builtin.shell: /tmp/install_oh_my_zsh.sh
-  environment:
-    RUNZSH: 'no'
-  args:
-    creates: '{{ ansible_facts.user_dir }}/.oh-my-zsh'
-  tags: [ohmyzsh]
-
-- name: Clone Oh My Zsh themes and plugins
+- name: Install or update Oh My Zsh
   ansible.builtin.git:
-    repo: '{{ item.repo }}'
-    dest: '{{ item.dest }}'
+    repo: https://github.com/ohmyzsh/ohmyzsh.git
+    dest: "{{ ansible_facts.user_dir }}/.oh-my-zsh"
     depth: 1
+    force: true
+  tags: [ohmyzsh]
+
+- name: Install or update Oh My Zsh themes and plugins
+  ansible.builtin.git:
+    repo: "{{ item.repo }}"
+    dest: "{{ item.dest }}"
+    depth: 1
+    force: true
   loop:
-    - { repo: 'https://github.com/romkatv/powerlevel10k.git', dest: '{{ ansible_facts.user_dir }}/.oh-my-zsh/custom/themes/powerlevel10k' }
-    - { repo: 'https://github.com/zsh-users/zsh-syntax-highlighting.git', dest: '{{ ansible_facts.user_dir }}/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting' }
-    - { repo: 'https://github.com/zsh-users/zsh-autosuggestions.git', dest: '{{ ansible_facts.user_dir }}/.oh-my-zsh/custom/plugins/zsh-autosuggestions' }
+    - repo: "https://github.com/romkatv/powerlevel10k.git"
+      dest: "{{ ansible_facts.user_dir }}/.oh-my-zsh/custom/themes/powerlevel10k"
+    - repo: "https://github.com/zsh-users/zsh-syntax-highlighting.git"
+      dest: "{{ ansible_facts.user_dir }}/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting"
+    - repo: "https://github.com/zsh-users/zsh-autosuggestions.git"
+      dest: "{{ ansible_facts.user_dir }}/.oh-my-zsh/custom/plugins/zsh-autosuggestions"
   tags: [ohmyzsh]

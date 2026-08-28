@@ -1,0 +1,35 @@
+# lazygit pinned to /usr/local/bin (sha256-verified).
+- name: Download lazygit v{{ lazygit_version }}
+  ansible.builtin.get_url:
+    url: "https://github.com/jesseduffield/lazygit/releases/download/v{{ lazygit_version }}/lazygit_{{ lazygit_version }}_Linux_x86_64.tar.gz"
+    dest: "/tmp/lazygit-v{{ lazygit_version }}.tar.gz"
+    checksum: "sha256:{{ lazygit_sha256 }}"
+    mode: "0644"
+  register: lazygit_download
+  tags: [lazygit]
+
+- name: Create lazygit extract directory
+  ansible.builtin.file:
+    path: "/tmp/lazygit-v{{ lazygit_version }}_extract"
+    state: directory
+    mode: "0755"
+  when: lazygit_download.changed
+  tags: [lazygit]
+
+- name: Extract lazygit
+  ansible.builtin.unarchive:
+    src: "/tmp/lazygit-v{{ lazygit_version }}.tar.gz"
+    dest: "/tmp/lazygit-v{{ lazygit_version }}_extract"
+    remote_src: true
+  when: lazygit_download.changed
+  tags: [lazygit]
+
+- name: Install lazygit binary
+  become: true
+  ansible.builtin.copy:
+    src: "/tmp/lazygit-v{{ lazygit_version }}_extract/lazygit"
+    dest: /usr/local/bin/lazygit
+    mode: "0755"
+    remote_src: true
+  when: lazygit_download.changed
+  tags: [lazygit]

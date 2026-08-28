@@ -1,10 +1,14 @@
 - name: Configure once for all!
   hosts: localhost
   connection: local
+  vars_files:
+    - vars/versions.yml
   roles:
+    - role: homebrew
+      when: ansible_facts.system == "Darwin"
     - packages
     - tools
-    - nodejs
+    - mise
     - neovim
     - ohmyzsh
     - astrovim

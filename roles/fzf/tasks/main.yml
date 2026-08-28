@@ -3,6 +3,7 @@
     repo: https://github.com/junegunn/fzf.git
     dest: '{{ ansible_facts.user_dir }}/.fzf'
     depth: 1
+    force: true
   tags: [fzf]
 
 - name: Run fzf install script

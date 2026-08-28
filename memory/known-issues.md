@@ -1,0 +1,20 @@
+# Known Issues & Conflicts
+
+A running log of bugs, conflicts, and footguns actually encountered during
+setup, with root cause and fix. Append new rows at the bottom; never delete
+a row (mark it `resolved` if no longer applies).
+
+| Date | Platform | Component | Symptom | Root cause | Fix | Commit / Note |
+|------|----------|-----------|---------|------------|-----|----------------|
+| pre-2026-08 | Linux | packages | `packages` role fails: `autojump` not found | `autojump` lives in Ubuntu's `universe` apt component, not enabled on minimal images | enable `universe`, or use the stock `ubuntu:24.04` image / desktop install (both include it) | carried over from old README |
+| pre-2026-08 | Linux | ohmyzsh | `changed` reported every run | role did `rm -rf ~/.oh-my-zsh` + reinstall by design | now idempotent: git clone-or-update, no wipe (D005) | resolved 2026-08 |
+| pre-2026-08 | Linux | opencode | re-downloads installer every run | no `creates` guard; self-skips the binary install when current (`changed_when: false`) | behavior kept; harmless | carried over |
+| pre-2026-08 | Linux | tools/bat | `bat` command missing | Ubuntu/Debian ships the binary as `batcat` | tools role symlinks `/usr/local/bin/bat -> /usr/bin/batcat` | carried over |
+| 2026-08-28 | Linux | astrovim | re-run fails: "local modifications exist" in `~/.config/nvim` | `git` module with `force: no` (default) refuses to update a dirty checkout | `force: yes` — local nvim edits are discarded; repo is authoritative (D002) | this refactor |
+| 2026-08-28 | Linux | tools | delta/zoxide/eza/dust/lazydocker downloads unverified | no `sha256` checksum on `get_url` | all binaries now sha256-verified; see `vars/versions.yml` | this refactor |
+| 2026-08-28 | Linux | opencode | used `ansible_facts.env.HOME` (wrong under `become`) | carried over from before the user_dir migration | switched to `ansible_facts.user_dir` | this refactor |
+| 2026-08-28 | macOS | shell | `chsh` / `user` module needs sudo + password | macOS default shell is already zsh since Catalina | `shell` role is Linux-only; no-op on macOS (D004) | this refactor |
+| 2026-08-28 | macOS | uv | dual uv install (curl script + brew) path ambiguity | brew also packages uv | uv installed only by `install.sh` (curl) on both platforms; ansible `tools` role skips it on macOS (D006) | this refactor |
+| 2026-08-28 | macOS | atuin | Ctrl-R no longer opens fzf | atuin `init zsh` takes over Ctrl-R by design | intended (atuin replaces fzf's Ctrl-R); fzf's Ctrl-T / Alt-C still work | D008 |
+| 2026-08-28 | Linux | tools | "Check installed versions" task fails: `/bin/sh: set: Illegal option -o pipefail` (rc=2) on all 8 tools → play aborts at `tools` role | the version-check `shell` used `set -o pipefail` (added for `risky-shell-pipe` lint) but had no `executable:`, so Ansible ran it under `/bin/sh` = **dash**, which doesn't support `pipefail` (a bash feature) | added `args: executable: /bin/bash` + trailing `exit 0` to the task (bash supports pipefail; no-match path now exits 0 cleanly). The `github_binary` install task already had `executable: /bin/bash`, so it was unaffected | this refactor |
+| 2026-08-28 | Linux | github_binary | "Install binaries" task fails: `A 'when' expression failed: object of type 'str' has no attribute 'type'`, `item=delta` shown as a string | **nested-loop `item` collision**: the outer `include_role` loop (tools/linux.yml) sets `item` = the tool dict and passes `github_binary_tool: "{{ item }}"` (lazily templated); the role's "Install binaries" task had its **own inner loop** reusing the default loop_var `item`, which clobbered `item` to the binary-name string ("delta") — so the lazy `github_binary_tool = {{ item }}` resolved to the string, and `github_binary_tool.type` blew up | gave the inner loop a distinct `loop_control: loop_var: github_binary_bin` (and updated the shell to use `{{ github_binary_bin }}`); `item` now stays the outer dict across the role's tasks. **Ansible gotcha**: any `include_role`/`include_tasks` loop that passes `{{ item }}` into a role containing its own loop MUST use a distinct `loop_var` at the inner level | this refactor |

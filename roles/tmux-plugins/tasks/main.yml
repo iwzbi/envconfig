@@ -1,32 +1,37 @@
 # tmux plugin manager + session persistence plugins.
 # .tmux.conf references ~/.tmux/plugins/tpm/tpm — tpm must be cloned before tmux starts.
+# force: true makes each clone rerunnable (D002): updates to remote tip, discards
+# any local mods (these are upstream plugin repos we never edit locally).
 
 - name: Clone tpm (tmux plugin manager)
   ansible.builtin.git:
-    repo: 'https://github.com/tmux-plugins/tpm'
-    dest: '{{ ansible_facts.user_dir }}/.tmux/plugins/tpm'
+    repo: "https://github.com/tmux-plugins/tpm"
+    dest: "{{ ansible_facts.user_dir }}/.tmux/plugins/tpm"
     depth: 1
+    force: true
   tags: [tmux-plugins]
 
 - name: Clone tmux-resurrect
   ansible.builtin.git:
-    repo: 'https://github.com/tmux-plugins/tmux-resurrect'
-    dest: '{{ ansible_facts.user_dir }}/.tmux/plugins/tmux-resurrect'
+    repo: "https://github.com/tmux-plugins/tmux-resurrect"
+    dest: "{{ ansible_facts.user_dir }}/.tmux/plugins/tmux-resurrect"
     depth: 1
+    force: true
   tags: [tmux-plugins]
 
 - name: Clone tmux-continuum
   ansible.builtin.git:
-    repo: 'https://github.com/tmux-plugins/tmux-continuum'
-    dest: '{{ ansible_facts.user_dir }}/.tmux/plugins/tmux-continuum'
+    repo: "https://github.com/tmux-plugins/tmux-continuum"
+    dest: "{{ ansible_facts.user_dir }}/.tmux/plugins/tmux-continuum"
     depth: 1
+    force: true
   tags: [tmux-plugins]
 
 - name: Install tmux plugins via tpm
   ansible.builtin.shell: |
     {{ ansible_facts.user_dir }}/.tmux/plugins/tpm/bin/install_plugins
   environment:
-    TMUX_PLUGIN_MANAGER_PATH: '{{ ansible_facts.user_dir }}/.tmux/plugins/'
+    TMUX_PLUGIN_MANAGER_PATH: "{{ ansible_facts.user_dir }}/.tmux/plugins/"
   changed_when: false
   failed_when: false
   tags: [tmux-plugins]

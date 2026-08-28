@@ -1,0 +1,24 @@
+# macOS packages via Homebrew. zsh/vim/unzip/lsof ship with macOS; cargo is
+# not needed (all CLI tools are prebuilt binaries). git/curl/wget are installed
+# via brew for newer versions than the system defaults. See memory/decisions.md D004.
+- name: Install macOS packages via Homebrew
+  community.general.homebrew:
+    name:
+      - git
+      - curl
+      - wget
+      - tmux
+      - autojump
+      - ripgrep
+      - fd
+      - bat
+      - jq
+      - btop
+      - direnv
+      - gh
+    state: present
+  environment:
+    PATH: "/opt/homebrew/bin:/usr/local/bin:{{ lookup('ansible.builtin.env', 'PATH') }}"
+    HOMEBREW_NO_AUTO_UPDATE: "1"
+    HOMEBREW_NO_ANALYTICS: "1"
+  tags: [packages]

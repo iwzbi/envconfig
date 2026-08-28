@@ -1,0 +1,25 @@
+# Ubuntu/Debian apt packages. autojump lives in the 'universe' component
+# (enabled by default on stock Ubuntu desktop/24.04 image).
+- name: Install apt packages
+  become: true
+  ansible.builtin.package:
+    name:
+      - vim
+      - git
+      - zsh
+      - curl
+      - wget
+      - tmux
+      - autojump
+      - cargo
+      - unzip
+      - ripgrep
+      - fd-find
+      - lsof
+      - bat
+      - jq
+      - btop
+      - direnv
+      - gh
+    state: present
+  tags: [packages]

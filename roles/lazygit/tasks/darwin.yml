@@ -1,0 +1,9 @@
+- name: Install lazygit via Homebrew
+  community.general.homebrew:
+    name: lazygit
+    state: present
+  environment:
+    PATH: "/opt/homebrew/bin:/usr/local/bin:{{ lookup('ansible.builtin.env', 'PATH') }}"
+    HOMEBREW_NO_AUTO_UPDATE: "1"
+    HOMEBREW_NO_ANALYTICS: "1"
+  tags: [lazygit]

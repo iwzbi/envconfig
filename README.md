@@ -1,52 +1,83 @@
 envconfig — Configure Your Workspace Once for All
 ================================================
 
-Automated development environment setup via Ansible. One command installs
-zsh, Oh My Zsh, Neovim, Node.js, fzf, lazygit, opencode, and all dotfiles —
-plus a suite of modern CLI tools (bat, eza, delta, zoxide, btop, dust, etc).
+Automated development environment setup via Ansible. **One command** installs
+zsh, Oh My Zsh, Neovim, Node.js (via mise), fzf, lazygit, opencode, and all
+dotfiles — plus a suite of modern CLI tools (bat, eza, delta, zoxide, btop,
+dust, yazi, glow, atuin, etc).
+
+Works on **Ubuntu/Debian servers** and **macOS (Apple Silicon)**. Idempotent:
+safe to re-run on an existing machine — it upgrades/overwrites without
+conflicts (see [memory/decisions.md](memory/decisions.md) for the design).
 
 Prerequisites
 -------------
-- **Ubuntu 24.04** (or compatible Debian). The `autojump` package requires
-  the `universe` apt component — enabled by default on stock Ubuntu.
-- **uv** (Python package manager) — installs Ansible and manages the project
-  environment. Install it with `curl -LsSf https://astral.sh/uv/install.sh | sh`
-  (one-time per machine).
-- **sudo** access (several roles use `become: yes` for system-level tasks).
+- **Linux**: Ubuntu 24.04 (or compatible Debian). `autojump` needs the
+  `universe` apt component (enabled by default on stock Ubuntu). `sudo` access.
+- **macOS**: Apple Silicon (arm64). `install.sh` installs Homebrew on first
+  run (the only step that needs your password; once per machine).
+- Nothing else — `install.sh` bootstraps `uv` (which installs Ansible) itself.
 
 Quick Start
 -----------
 ```bash
+# One command (bootstraps brew on macOS + uv on both, then runs the playbook):
+curl -LsSf https://raw.githubusercontent.com/iwzbi/envconfig/main/install.sh | sh
+```
+Or, from a clone:
+```bash
 git clone https://github.com/iwzbi/envconfig.git
 cd envconfig
-curl -LsSf https://astral.sh/uv/install.sh | sh   # install uv (once per machine)
-uv run ansible-playbook configme.yaml
+./install.sh                      # add e.g. --tags neovim,fzf to run a subset
 ```
 Then `source ~/.zshrc` (or restart your terminal).
 
-No inventory file needed — the playbook uses `connection: local`
-and runs against `localhost`.
+No inventory file needed — the playbook uses `connection: local` and runs
+against `localhost`. To update an existing machine later: `./install.sh`
+again (it pulls the repo and re-runs; everything is idempotent).
 
 What it installs
 ----------------
-`configme.yaml` runs 12 roles in order:
+`configme.yaml` runs these roles in order (versions pinned in
+[`vars/versions.yml`](vars/versions.yml)):
 
-| Role | Installs |
-|------|----------|
-| **packages** | apt deps: zsh, git, tmux, ripgrep, fd-find, autojump, cargo, vim, curl, wget, unzip, lsof, **bat, eza, jq, btop, direnv, gh** |
-| **tools** | delta (git diff pager), zoxide (smarter cd), lazydocker (Docker TUI), dust (modern du), uv (fast Python). batcat→bat symlink. |
-| **nodejs** | nvm + Node 22 (`creates` guard, `changed_when` on already-installed) |
-| **neovim** | nvim v0.11.0 to `/opt` (SHA256-verified) |
-| **ohmyzsh** | Oh My Zsh + Powerlevel10k + syntax-highlighting + autosuggestions (reinstalled every run by design) |
-| **astrovim** | MyAstroNvim config to `~/.config/nvim` |
-| **fzf** | fuzzy finder + key-bindings/completion (`--all`) |
-| **lazygit** | git TUI, binary-only to `/usr/local/bin` (SHA256-verified) |
-| **tmux-plugins** | tpm (plugin manager) + tmux-resurrect (session save/restore) + tmux-continuum (auto-save) |
-| **configs** | deploys `.zshrc`, `.tmux.conf`, `.gitconfig` from `conf/`; `.p10k.zsh` copied only if missing (`force: no`) |
-| **opencode** | opencode CLI to `~/.opencode/bin` (always-latest; self-skips when current) + syncs configs from `conf/opencode/` to `~/.config/opencode/` |
-| **shell** | sets login shell to `/bin/zsh` |
+| Role | Linux | macOS |
+|------|-------|-------|
+| **homebrew** | — | asserts brew is present (install.sh installs it) |
+| **packages** | apt: zsh, git, tmux, ripgrep, fd-find, autojump, cargo, vim, curl, wget, unzip, lsof, bat, jq, btop, direnv, gh | brew: git, curl, wget, tmux, autojump, ripgrep, fd, bat, jq, btop, direnv, gh |
+| **tools** | sha256-verified GitHub binaries: delta, zoxide, eza, dust, lazydocker, **yazi, glow, atuin**; uv via install script; batcat→bat symlink | brew: git-delta, zoxide, eza, dust, lazydocker, yazi, glow, atuin |
+| **mise** | `mise.run` + `mise use -g node@22` (replaces nvm) | same (single code path) |
+| **neovim** | nvim v0.11.0 to `/opt` (SHA256-verified) | brew neovim |
+| **ohmyzsh** | Oh My Zsh + Powerlevel10k + syntax-highlighting + autosuggestions (idempotent git update) | same |
+| **astrovim** | MyAstroNvim config to `~/.config/nvim` (force: yes — repo is authoritative) | same |
+| **fzf** | git clone + `install --all` | same |
+| **lazygit** | binary to `/usr/local/bin` (SHA256-verified) | brew lazygit |
+| **tmux-plugins** | tpm + tmux-resurrect + tmux-continuum | same |
+| **configs** | deploys `.zshrc`, `.tmux.conf`, `.gitconfig` from `conf/` (with `backup: yes`); `.p10k.zsh` only if missing | same |
+| **opencode** | npm `-g opencode-ai@latest` via `mise exec`; syncs `conf/opencode/` → `~/.config/opencode/` | same |
+| **shell** | `chsh -s /bin/zsh` | no-op (zsh is default on macOS) |
 
-Run a subset with tags (one tag per role): `--tags neovim,fzf`.
+Run a subset with tags (one tag per role): `./install.sh --tags neovim,fzf`.
+
+One-command & updates
+---------------------
+- `./install.sh` — full setup (bootstraps brew/uv if missing, runs playbook). Args pass through to `ansible-playbook`.
+- `make update` — `git pull` then `./install.sh` (idempotent upgrade path).
+- `make lint` — `ansible-lint` + `--syntax-check` (no side effects).
+- `make test` — Docker build + run the playbook **twice** (second run must not fail → idempotency gate).
+
+Version management
+------------------
+All pinned versions live in [`vars/versions.yml`](vars/versions.yml) — the
+single source of truth. Linux binaries are SHA256-verified at download.
+macOS tools follow `brew upgrade` (unpinned by design — see
+[memory/decisions.md D001](memory/decisions.md#d001)).
+
+Bump a tool (downloads the asset, computes sha256, updates the file):
+```bash
+uv run python bin/bump-version.py zoxide 0.11.0
+```
+Version history is recorded in [memory/versions.md](memory/versions.md).
 
 Tool Usage Guide
 ---------------
@@ -90,9 +121,41 @@ Learns from your `cd` habits. `j` (autojump) still works alongside.
 ### fzf — fuzzy finder
 ```bash
 Ctrl-T                  # fuzzy find files (uses fd)
-Ctrl-R                  # fuzzy search shell history
 Alt-C                   # fuzzy cd (directories only)
 vim **<Tab>             # fzf-completion in any command
+```
+Note: Ctrl-R is handled by **atuin** (below), not fzf.
+
+### atuin — shell history with full-text search
+```bash
+Ctrl-R                  # fuzzy full-text search across shell history
+atuin search "git push" # search from the command line
+atuin stats             # history stats
+```
+Takes over Ctrl-R from fzf (see [D008](memory/decisions.md#d008)). Works
+offline; sync across machines is optional (`atuin sync`).
+
+### mise — runtime version manager (node, python, go, …)
+```bash
+mise use -g node@22      # set global node version
+mise use -g python@3.12  # set global python
+mise ls node             # list installed node versions
+mise exec -- node -v    # run a command in the mise environment
+```
+Replaces nvm; identical behaviour on Linux and macOS.
+
+### yazi — terminal file manager
+```bash
+yazi                    # launch (TUI file manager with image preview)
+# inside: hjkl navigate, Enter open, d delete, y yank, q quit
+```
+`ya` (the companion CLI) is also installed (used for yazi plugins).
+
+### glow — render markdown in the terminal
+```bash
+glow README.md          # pretty-print a markdown file
+glow -p README.md       # pager mode
+cat README.md | glow -  # render from stdin
 ```
 
 ### gh — GitHub CLI
@@ -179,18 +242,20 @@ mkdir -p ~/.secrets && printf '%s' 'YOUR_KEY' > ~/.secrets/idealab.key && chmod 
 ```
 Without it, opencode runs but the idealab provider has no key.
 
-Sandbox Testing (Docker)
-------------------------
+Project memory
+--------------
+[memory/](memory/) records conflicts, bugs, version decisions, and the
+reasoning behind non-obvious choices (referenced from code as `D0xx`). When
+you hit a setup issue on any machine, add a row to
+[memory/known-issues.md](memory/known-issues.md).
+
+Sandbox Testing (Docker, Linux)
+-------------------------------
 The `Dockerfile` builds an Ubuntu 24.04 image with Ansible pre-installed.
 The playbook runs at container time so each test starts from a clean machine.
 
-### Build
 ```bash
 docker build -t envconfig-test .
-```
-
-### Run a fresh container
-```bash
 docker run --rm -it envconfig-test
 # Inside the container (cwd is /opt/envconfig, ansible on PATH):
 ansible-playbook configme.yaml --syntax-check
@@ -201,7 +266,11 @@ ansible-playbook configme.yaml
 The playbook runs as user `tester` (passwordless sudo). Individual roles
 have `become: yes` where needed — **do not** use the `--become` flag on
 the command line (it would make all tasks run as root, installing
-user-level tools like nvm/fzf/opencode into `/root/` instead of `~`).
+user-level tools like mise/fzf/opencode into `/root/` instead of `~`).
+
+CI runs `ansible-lint` + `--syntax-check`, plus the playbook **twice** on
+both `ubuntu-latest` (Docker) and `macos-latest` (`./install.sh`) — the
+second run must not fail, which proves idempotency on both platforms.
 
 ### Behind a proxy
 If your network requires a proxy for GitHub/uv but the proxy 403s on
@@ -230,13 +299,13 @@ echo 'Defaults env_keep += "http_proxy https_proxy HTTP_PROXY HTTPS_PROXY"' | su
 
 Known items to watch
 --------------------
-- **`universe` apt component**: `autojump` lives in Ubuntu's `universe`.
-  The stock `ubuntu:24.04` image and desktop installs include it; if
-  missing, enable it or the `packages` role fails.
-- **Oh My Zsh**: deliberately non-idempotent (reinstalled every run per
-  user preference) — expect `changed` on that role every run.
-- **opencode always-latest**: the opencode role has no `creates` guard
-  and re-downloads the installer every run. It self-skips the actual
-  binary install when the version is current (`changed_when: false`).
-- **bat on Ubuntu**: the `bat` package installs the binary as `batcat`.
-  The `tools` role creates a symlink `/usr/local/bin/bat -> /usr/bin/batcat`.
+Moved to [memory/known-issues.md](memory/known-issues.md). Highlights:
+- **`universe` apt component** (Linux): `autojump` lives in Ubuntu's
+  `universe`; enable it if the `packages` role fails.
+- **astrovim `force: yes`**: re-running overwrites local `~/.config/nvim`
+  edits — the repo is authoritative. Fork MyAstroNvim if you keep local
+  nvim tweaks (see [D002](memory/decisions.md#d002)).
+- **atuin takes Ctrl-R**: fzf's Ctrl-R is replaced by atuin (fzf's Ctrl-T
+  and Alt-C still work) — see [D008](memory/decisions.md#d008).
+- **bat on Ubuntu**: the `bat` apt package installs the binary as
+  `batcat`; the `tools` role symlinks `/usr/local/bin/bat -> /usr/bin/batcat`.

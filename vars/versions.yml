@@ -1,0 +1,92 @@
+# =============================================================================
+# envconfig — centralized version manifest (single source of truth)
+# =============================================================================
+# Every pinned version in the playbook lives here.
+#
+#   Linux binaries are sha256-verified at download time.
+#   macOS uses Homebrew, which is UNPINNED by design (follows `brew upgrade`),
+#   so brew-managed tools have no entries here — see memory/decisions.md D001.
+#
+# Bump a tool:   uv run python bin/bump-version.py <tool> <new-version>
+#   (downloads the asset, computes sha256, updates this file in place)
+# Add a tool:    append to github_tools below + add the formula to
+#   roles/tools/tasks/darwin.yml (if the brew name differs, set `brew:`)
+# =============================================================================
+
+# --- runtimes (managed by mise, see roles/mise) ---
+node_major: "22"
+
+# --- neovim ---
+# Linux: pinned binary to /opt (sha256-verified). macOS: brew, unpinned (D001).
+neovim_version: "0.11.0"
+neovim_sha256: "fe0a5bc79e64c5e4d9f844cd96157ebd3919ef1343b329e9ebc3f455924cc7d6"
+
+# --- lazygit ---
+# Linux: pinned binary to /usr/local/bin. macOS: brew, unpinned (D001).
+lazygit_version: "0.44.1"
+lazygit_sha256: "84682f4ad5a449d0a3ffbc8332200fe8651aee9dd91dcd8d87197ba6c2450dbc"
+
+# --- GitHub-release binaries (Linux only; macOS uses brew) ---
+# Installed by roles/tools/tasks/linux.yml via the shared roles/github_binary
+# helper. On macOS these collapse to one brew install in tools/darwin.yml.
+#
+#   name      binary name (also the --version command and dest filename)
+#   version   pinned release version (without leading 'v'; URL adds 'v' if needed)
+#   sha256    of the linux x86_64 asset (verified by get_url checksum)
+#   url       release URL with {version} placeholder
+#   type      deb | archive
+#   dest      user (~/.local/bin, no sudo) | system (/usr/local/bin, sudo)
+#   binaries  optional list of binaries to install from the archive (default [name])
+#   brew      optional Homebrew formula name if it differs from `name`
+# -----------------------------------------------------------------------------
+github_tools:
+  - name: delta
+    version: "0.19.2"
+    sha256: "ea4f0222950ee750a3d38dd80d03bce4cee07a3f63928fc47548383bcaf23093"
+    url: "https://github.com/dandavison/delta/releases/download/{version}/git-delta_{version}_amd64.deb"
+    type: deb
+    dest: system
+    brew: git-delta
+  - name: zoxide
+    version: "0.10.0"
+    sha256: "2d93385b99f3e82cf2701609a1bffcad863fbeb75aa3fe7eb6be4d29be68b1ae"
+    url: "https://github.com/ajeetdsouza/zoxide/releases/download/v{version}/zoxide-{version}-x86_64-unknown-linux-musl.tar.gz"
+    type: archive
+    dest: user
+  - name: eza
+    version: "0.23.5"
+    sha256: "e06eebab74b73d6b7d51a796a353824b001bea82df077706382e100815d28904"
+    url: "https://github.com/eza-community/eza/releases/download/v{version}/eza_x86_64-unknown-linux-musl.tar.gz"
+    type: archive
+    dest: user
+  - name: dust
+    version: "1.2.5"
+    sha256: "64b16f5c10cc4c25d2eaa144e9d2d44b3ed8f72ee63b3bc0a92c85e21e9e0932"
+    url: "https://github.com/bootandy/dust/releases/download/v{version}/dust-v{version}-x86_64-unknown-linux-gnu.tar.gz"
+    type: archive
+    dest: user
+  - name: lazydocker
+    version: "0.25.2"
+    sha256: "0d9dbfc26068b218e7ed84b104748cadc6e3cf733c0afd35465306fb39b9523c"
+    url: "https://github.com/jesseduffield/lazydocker/releases/download/v{version}/lazydocker_{version}_Linux_x86_64.tar.gz"
+    type: archive
+    dest: system
+  - name: yazi
+    version: "26.8.15"
+    sha256: "a6702034790afcdbb546b73b288c9b184a751fa3f2f17f0ad4d26fc302fb8d45"
+    url: "https://github.com/sxyazi/yazi/releases/download/v{version}/yazi-x86_64-unknown-linux-musl.zip"
+    type: archive
+    dest: user
+    binaries: [yazi, ya]
+  - name: glow
+    version: "3.0.0"
+    sha256: "13e05e4b2acc18d2aee44291aefe6325b077ec321b631a0cfa780e8e3bc33f78"
+    url: "https://github.com/charmbracelet/glow/releases/download/v{version}/glow_{version}_Linux_x86_64.tar.gz"
+    type: archive
+    dest: user
+  - name: atuin
+    version: "18.20.1"
+    sha256: "1ad3e8162b4570118a3e05ae6b9ca0575aad0bb018a83001805c4f52d4fe9c8f"
+    url: "https://github.com/atuinsh/atuin/releases/download/v{version}/atuin-x86_64-unknown-linux-musl.tar.gz"
+    type: archive
+    dest: user

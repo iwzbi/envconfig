@@ -1,0 +1,45 @@
+name: test
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - run: uv sync
+      - run: uv run ansible-playbook configme.yaml --syntax-check
+      - run: uv run ansible-lint
+
+  # Linux: build the Docker sandbox and run the playbook twice inside it.
+  # The second run must not fail — that proves idempotency (changed is fine;
+  # failed is not). Covers requirement: "re-run on existing env without bugs".
+  test-linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build -t envconfig-test .
+      - name: Run playbook twice (idempotency gate)
+        run: |
+          docker run --rm envconfig-test bash -lc '
+            ansible-playbook configme.yaml &&
+            echo "=== second run: idempotency check ===" &&
+            ansible-playbook configme.yaml'
+
+  # macOS (Apple Silicon): install.sh already handles brew+uv bootstrap.
+  # Run twice — second run must not fail. Validates the macOS path and
+  # idempotency on the platform we can't test in Docker.
+  test-macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - name: Run install.sh twice (idempotency gate)
+        run: |
+          ./install.sh
+          echo "=== second run: idempotency check ==="
+          ./install.sh

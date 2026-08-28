@@ -1,24 +1,31 @@
+# Deploys .zshrc, .tmux.conf, .gitconfig from conf/ (authoritative). .p10k.zsh
+# is copied only if missing (force: false) so per-machine p10k choices persist.
+# backup: true on the authoritative copies keeps a timestamped ~/.zshrc.1234~
+# so a re-run never silently destroys local edits (D002).
 - name: Find configuration files
   ansible.builtin.find:
-    paths: '{{ playbook_dir }}/conf'
+    paths: "{{ playbook_dir }}/conf"
     hidden: true
     file_type: file
-  register: conf_files
+  register: configs_conf_files
   tags: [configs]
 
-- name: Copy managed configuration files (authoritative)
+- name: Copy managed configuration files (authoritative; backups kept)
   ansible.builtin.copy:
-    src: '{{ item.path }}'
-    dest: '{{ ansible_facts.user_dir }}/{{ item.path | basename }}'
-  loop: '{{ conf_files.files }}'
+    src: "{{ item.path }}"
+    dest: "{{ ansible_facts.user_dir }}/{{ item.path | basename }}"
+    mode: "0644"
+    backup: true
+  loop: "{{ configs_conf_files.files }}"
   loop_control:
-    label: '{{ item.path | basename }}'
-  when: item.path | basename != '.p10k.zsh'
+    label: "{{ item.path | basename }}"
+  when: item.path | basename != ".p10k.zsh"
   tags: [configs]
 
 - name: Copy personalized p10k config (only if missing)
   ansible.builtin.copy:
-    src: '{{ playbook_dir }}/conf/.p10k.zsh'
-    dest: '{{ ansible_facts.user_dir }}/.p10k.zsh'
-    force: no
+    src: "{{ playbook_dir }}/conf/.p10k.zsh"
+    dest: "{{ ansible_facts.user_dir }}/.p10k.zsh"
+    mode: "0644"
+    force: false
   tags: [configs]

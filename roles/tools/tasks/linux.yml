@@ -1,0 +1,54 @@
+# Linux: GitHub-release binaries, sha256-verified, installed/upgraded via the
+# shared github_binary role. Idempotent: a version check (binary present AND
+# --version output contains the target version) skips tools already current.
+# batcat->bat symlink handles the Ubuntu naming quirk. uv via install script
+# (creates guard) as a guarantee for users who bypass install.sh.
+
+- name: Symlink batcat to bat (Ubuntu quirk)
+  ansible.builtin.shell: '[ -f /usr/bin/batcat ] && ln -sf /usr/bin/batcat /usr/local/bin/bat || true'
+  become: true
+  changed_when: false
+  tags: [tools]
+
+- name: Check installed versions of github tools
+  ansible.builtin.shell: |
+    set -o pipefail
+    for p in "$HOME/.local/bin/{{ item.name }}" /usr/local/bin/{{ item.name }} /usr/bin/{{ item.name }}; do
+      if [ -x "$p" ]; then "$p" --version 2>/dev/null | head -1; exit 0; fi
+    done
+    exit 0
+  args:
+    executable: /bin/bash
+  loop: "{{ github_tools }}"
+  register: tools_github_versions
+  changed_when: false
+  tags: [tools]
+
+- name: Install or upgrade github binary tools
+  ansible.builtin.include_role:
+    name: github_binary
+  loop: "{{ github_tools }}"
+  loop_control:
+    index_var: tool_idx
+    label: "{{ item.name }} v{{ item.version }}"
+  vars:
+    github_binary_tool: "{{ item }}"
+  when: "item.version not in tools_github_versions.results[tool_idx].stdout"
+  tags: [tools]
+
+- name: Download uv installer
+  ansible.builtin.get_url:
+    url: https://astral.sh/uv/install.sh
+    dest: /tmp/uv-install.sh
+    mode: "0755"
+  register: tools_uv_installer
+  tags: [tools]
+
+- name: Install uv (fast Python package manager)
+  ansible.builtin.command: /tmp/uv-install.sh
+  args:
+    creates: "{{ ansible_facts.user_dir }}/.local/bin/uv"
+  environment:
+    UV_INSTALL_DIR: "{{ ansible_facts.user_dir }}/.local/bin"
+  when: tools_uv_installer.changed
+  tags: [tools]

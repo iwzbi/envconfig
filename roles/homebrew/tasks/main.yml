@@ -1,0 +1,19 @@
+# macOS only. install.sh installs Homebrew on a fresh Mac BEFORE running the
+# playbook (brew's installer needs interactive sudo on first run, which breaks
+# a one-shot playbook run). This role just asserts brew is present and on PATH
+# so later brew tasks fail with a clear message instead of a confusing one.
+# See memory/decisions.md D004 (mac免sudo design).
+
+- name: Assert Homebrew is installed
+  ansible.builtin.stat:
+    path: /opt/homebrew/bin/brew
+  register: homebrew_brew_binary
+  tags: [homebrew]
+
+- name: Fail with guidance if Homebrew is missing
+  ansible.builtin.assert:
+    that: homebrew_brew_binary.stat.exists
+    fail_msg: >-
+      Homebrew not found at /opt/homebrew/bin/brew. Run ./install.sh (it
+      installs Homebrew on first run), or install manually per https://brew.sh.
+  tags: [homebrew]

@@ -1,6 +1,0 @@
----
-# Centralized version for nvm. Node.js version is a major (nvm install <major>).
-# Upgrade nvm: update nvm_version here.
-# Upgrade Node: change node_major to a new major version.
-nvm_version: "0.40.1"
-node_major: "22"

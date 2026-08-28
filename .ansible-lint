@@ -1,0 +1,20 @@
+---
+# ansible-lint config for envconfig.
+# Skipped rules are intentional and documented in memory/decisions.md;
+# everything else must pass (CI enforces this).
+
+skip_list:
+  # Role dir `tmux-plugins` has a hyphen (predates this refactor). Renaming
+  # would break configme.yaml references, the `tmux-plugins` tag, and user
+  # muscle memory — out of scope for this change.
+  - role-name
+  # We intentionally track each cloned repo's default-branch tip (force: yes,
+  # no pinned version/commit). Pinning would defeat the "pull latest" design;
+  # the default branch also varies (main vs master) so a blanket version: is
+  # not safe. See memory/decisions.md D001 / D002.
+  - latest[git]
+  # The download-then-extract-then-install pattern gates follow-up tasks on
+  # `when: <download>.changed`. Handlers would fire at end-of-play, breaking
+  # in-role ordering (extract must immediately follow download). False positive
+  # for this pattern.
+  - no-handler

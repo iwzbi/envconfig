@@ -1,0 +1,64 @@
+# Internal helper role — NOT in the playbook's roles list. Called via
+# include_role from roles/tools/tasks/linux.yml to install ONE GitHub-release
+# binary described by the `github_binary_tool` dict (see vars/versions.yml).
+#
+# Idempotent: the caller gates this on a version check, so we only run when
+# the tool is missing or at a different version. get_url's checksum param
+# makes the download itself idempotent within a run.
+
+- name: Resolve install settings ({{ github_binary_tool.name }})
+  ansible.builtin.set_fact:
+    github_binary_dir: "{{ '/usr/local/bin' if (github_binary_tool.dest | default('user')) == 'system' else ansible_facts.user_dir ~ '/.local/bin' }}"
+    github_binary_become: "{{ (github_binary_tool.dest | default('user')) == 'system' }}"
+    github_binary_file: "/tmp/{{ github_binary_tool.name }}-{{ github_binary_tool.version }}.{{ 'deb' if github_binary_tool.type == 'deb' else 'archive' }}"
+
+- name: Ensure install directory exists
+  ansible.builtin.file:
+    path: "{{ github_binary_dir }}"
+    state: directory
+    mode: "0755"
+  become: "{{ github_binary_become }}"
+
+- name: Download release ({{ github_binary_tool.name ~ "-" ~ github_binary_tool.version }})
+  ansible.builtin.get_url:
+    url: "{{ github_binary_tool.url | replace('{version}', github_binary_tool.version) }}"
+    dest: "{{ github_binary_file }}"
+    checksum: "sha256:{{ github_binary_tool.sha256 }}"
+    mode: "0644"
+  register: github_binary_download
+
+- name: Install .deb ({{ github_binary_tool.name }})
+  ansible.builtin.apt:
+    deb: "{{ github_binary_file }}"
+    state: present
+  become: true
+  when: github_binary_tool.type == 'deb' and github_binary_download.changed
+
+- name: Create extract directory ({{ github_binary_tool.name }})
+  ansible.builtin.file:
+    path: "/tmp/{{ github_binary_tool.name }}-{{ github_binary_tool.version }}_extract"
+    state: directory
+    mode: "0755"
+  when: github_binary_tool.type != 'deb' and github_binary_download.changed
+
+- name: Extract archive ({{ github_binary_tool.name }})
+  ansible.builtin.unarchive:
+    src: "{{ github_binary_file }}"
+    dest: "/tmp/{{ github_binary_tool.name }}-{{ github_binary_tool.version }}_extract"
+    remote_src: true
+  when: github_binary_tool.type != 'deb' and github_binary_download.changed
+
+- name: Install binaries ({{ github_binary_tool.name }})
+  ansible.builtin.shell: |
+    set -o pipefail
+    src=$(find "/tmp/{{ github_binary_tool.name }}-{{ github_binary_tool.version }}_extract" -type f -name "{{ github_binary_bin }}" | head -1)
+    if [ -z "$src" ]; then echo "binary {{ github_binary_bin }} not found in archive" >&2; exit 1; fi
+    install -m 0755 "$src" "{{ github_binary_dir }}/{{ github_binary_bin }}"
+  args:
+    executable: /bin/bash
+  loop: "{{ github_binary_tool.binaries | default([github_binary_tool.name]) }}"
+  loop_control:
+    loop_var: github_binary_bin
+  become: "{{ github_binary_become }}"
+  when: github_binary_tool.type != 'deb' and github_binary_download.changed
+  changed_when: true

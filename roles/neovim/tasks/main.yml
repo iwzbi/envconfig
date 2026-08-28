@@ -1,25 +1,3 @@
----
-- name: Download neovim v{{ neovim_version }}
-  ansible.builtin.get_url:
-    url: 'https://github.com/neovim/neovim/releases/download/v{{ neovim_version }}/nvim-linux-x86_64.tar.gz'
-    dest: '/tmp/nvim-v{{ neovim_version }}.tar.gz'
-    checksum: 'sha256:{{ neovim_sha256 }}'
-  register: nvim_download
-  tags: [neovim]
-
-- name: Remove old neovim installation
-  become: true
-  ansible.builtin.file:
-    path: /opt/nvim-linux-x86_64
-    state: absent
-  when: nvim_download.changed
-  tags: [neovim]
-
-- name: Unarchive neovim
-  become: true
-  ansible.builtin.unarchive:
-    src: '/tmp/nvim-v{{ neovim_version }}.tar.gz'
-    dest: /opt
-    remote_src: yes
-  when: nvim_download.changed
+- name: Install neovim for the current OS
+  ansible.builtin.include_tasks: "{{ ansible_facts.system | lower }}.yml"
   tags: [neovim]

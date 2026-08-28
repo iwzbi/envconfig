@@ -1,3 +1,6 @@
-.venv/
+.venv*/
 .git/
 .omo/
+.codegraph/
+.opencode/
+session-ses_*.md

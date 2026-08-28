@@ -1,4 +1,10 @@
-.venv/
+.venv*/
 .omo/
 session-ses_*.md
 __pycache__/
+
+# opencode runtime state (agents, config cache) — never commit
+.opencode/
+
+# codegraph index (local intelligence cache)
+.codegraph/
