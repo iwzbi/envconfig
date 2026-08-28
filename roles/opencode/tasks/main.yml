@@ -15,6 +15,34 @@
   changed_when: "opencode_install.stdout is search('(added|removed|changed) [0-9]+ package')"
   tags: [opencode]
 
+# Verify the CLI actually resolves inside mise's shimmed node tree. The
+# install reports success even when a stale ~/.npmrc 'prefix=' diverted it
+# off-PATH, and a leftover ~/.npm-global/bin/opencode symlink + PATH export
+# can shadow mise's correct copy (D014/D015). failed_when:false on the resolve
+# keeps a missing opencode from masking the assert's clear remediation msg.
+- name: Resolve opencode path via mise (D015)
+  ansible.builtin.command: "{{ ansible_facts.user_dir }}/.local/bin/mise exec -- which opencode"
+  register: opencode_resolved
+  changed_when: false
+  failed_when: false
+  tags: [opencode]
+
+- name: Verify opencode resolves inside mise's node tree (D015)
+  ansible.builtin.assert:
+    that:
+      - opencode_resolved.stdout.startswith(mise_node_prefix)
+    fail_msg: >-
+      opencode did NOT resolve inside mise's node tree (got:
+      '{{ opencode_resolved.stdout | default("<empty>", true) }}'). Either a
+      stale ~/.npmrc 'prefix=' diverted the npm -g install off-PATH, or an old
+      ~/.npm-global/bin/opencode symlink is shadowing mise's correct install.
+      Fix: (1) 'mise exec -- npm config delete prefix';
+      (2) remove any ~/.npm-global/bin/opencode symlink; (3) start a new
+      shell ('exec zsh'); (4) re-run ./install.sh --tags opencode. See D015.
+  vars:
+    mise_node_prefix: "{{ ansible_facts.user_dir }}/.local/share/mise/"
+  tags: [opencode]
+
 - name: Find pre-saved opencode config files
   ansible.builtin.find:
     paths: "{{ playbook_dir }}/conf/opencode"
