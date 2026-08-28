@@ -17,6 +17,10 @@
         "glm-5.2": {
           "_launch": true,
           "name": "bailian/glm-5.2"
+        },
+        "kimi-k3": {
+          "_launch": true,
+          "name": "kimi-k3"
         }
       }
     }
