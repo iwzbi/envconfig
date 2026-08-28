@@ -344,6 +344,29 @@ mkdir -p ~/.local/bin && cp /path/to/predownloaded-mise ~/.local/bin/mise && chm
 
 The role's `creates:` check then skips the install.
 
+### Air-gapped / red-zone (opencode via npmjs)
+
+The `opencode` role installs the CLI with `mise exec -- npm install -g
+opencode-ai@latest`, which reaches the npm registry at `registry.npmjs.org`.
+Unlike uv (D011) and mise (D016), this dependency has **no automatic
+fallback**: npm cannot bootstrap itself from a non-npm source, so there is no
+`block`/`rescue` to another host. `registry.npmjs.org` is a different host
+from `astral.sh` and `mise.run`, so in many red zones it is reachable even when
+those are not — if yours is, `opencode` installs normally and no action is
+needed.
+
+If `npmjs` is **also** blocked, point npm at a mirror you can reach before
+running the playbook (or before `--tags opencode`):
+
+```bash
+mise exec -- npm config set registry https://your-npm-mirror.example/
+```
+
+or skip the role entirely (`./install.sh --skip-tags opencode`) and install
+`opencode-ai` yourself later once you have npm connectivity. There is no
+`creates:`/stat gate on this role (it always re-checks `@latest`), so a
+pre-staged binary is not auto-detected — configure a mirror or skip the role.
+
 Known items to watch
 --------------------
 Moved to [memory/known-issues.md](memory/known-issues.md). Highlights:
