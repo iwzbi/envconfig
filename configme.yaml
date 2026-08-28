@@ -3,6 +3,36 @@
   connection: local
   vars_files:
     - vars/versions.yml
+  pre_tasks:
+    # Preflight: a leftover ~/.npmrc 'prefix=' (nvm-era sudo-free-global
+    # pattern) silently diverts 'mise exec -- npm -g' out of mise's shimmed
+    # node tree, so npm-global CLIs like opencode install off-PATH and
+    # vanish. Warn up front so the user can fix it before any role runs; the
+    # opencode role also fails fast post-install (D015). Tagged 'always' so
+    # it runs under --tags too (a cheap grep + a conditional warning).
+    - name: Check ~/.npmrc for an npm prefix diversion (D015)
+      ansible.builtin.shell: |
+        if [ -f "$HOME/.npmrc" ] && grep -qE '^[[:space:]]*prefix[[:space:]]*=' "$HOME/.npmrc"; then
+          echo found
+        else
+          echo ok
+        fi
+      args:
+        executable: /bin/bash
+      register: npmrc_prefix_check
+      changed_when: false
+      tags: [always]
+
+    - name: Warn about ~/.npmrc prefix diverting npm globals from mise (D015)
+      ansible.builtin.debug:
+        msg: >-
+          WARNING: ~/.npmrc sets an npm 'prefix=...' which diverts
+          'mise exec -- npm -g' away from mise's node tree — opencode (and
+          any future npm global) will install off-PATH and be unreachable.
+          Fix: 'mise exec -- npm config delete prefix', then re-run
+          ./install.sh. See memory/decisions.md (D015).
+      when: npmrc_prefix_check.stdout == 'found'
+      tags: [always]
   roles:
     - role: homebrew
       when: ansible_facts.system == "Darwin"
