@@ -1,0 +1,19 @@
+[project]
+name = "envconfig"
+version = "0.1.0"
+description = "Automated development environment setup via Ansible"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "ansible",
+]
+
+[dependency-groups]
+dev = [
+    "ansible-lint",
+]
+
+# This is an Ansible playbook repository, not an installable Python package:
+# uv manages the environment without building the project itself.
+[tool.uv]
+package = false
