@@ -1,8 +1,11 @@
-FROM ubuntu:24.04
+# BASE_IMAGE lets CI build against both 22.04 and 24.04 from the same
+# Dockerfile (see .github/workflows/test.yml). Defaults to 24.04 for local use.
+ARG BASE_IMAGE=ubuntu:24.04
+FROM ${BASE_IMAGE}
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-# The stock ubuntu:24.04 image already includes the 'universe' component
+# The stock ubuntu images (22.04 and 24.04) include the 'universe' component
 # (Components: main universe restricted multiverse in ubuntu.sources),
 # so 'autojump' from the 'packages' role is available without extra config.
 # Bypass any proxy env vars for apt (the proxy may 403 on Ubuntu archives).

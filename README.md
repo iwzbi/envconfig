@@ -12,8 +12,11 @@ conflicts (see [memory/decisions.md](memory/decisions.md) for the design).
 
 Prerequisites
 -------------
-- **Linux**: Ubuntu 24.04 (or compatible Debian). `autojump` needs the
-  `universe` apt component (enabled by default on stock Ubuntu). `sudo` access.
+- **Linux**: Ubuntu 22.04 or 24.04 (or compatible Debian). `autojump` needs
+  the `universe` apt component (enabled by default on stock Ubuntu). `sudo`
+  access (for system packages; the binary tools install user-local where
+  possible). `gh` is installed from its GitHub `.deb` (not apt) so it works
+  on 22.04, where it isn't in the default archives.
 - **macOS**: Apple Silicon (arm64). `install.sh` installs Homebrew on first
   run (the only step that needs your password; once per machine).
 - Nothing else — `install.sh` bootstraps `uv` (which installs Ansible) itself.
@@ -44,8 +47,8 @@ What it installs
 | Role | Linux | macOS |
 |------|-------|-------|
 | **homebrew** | — | asserts brew is present (install.sh installs it) |
-| **packages** | apt: zsh, git, tmux, ripgrep, fd-find, autojump, cargo, vim, curl, wget, unzip, lsof, bat, jq, btop, direnv, gh | brew: git, curl, wget, tmux, autojump, ripgrep, fd, bat, jq, btop, direnv, gh |
-| **tools** | sha256-verified GitHub binaries: delta, zoxide, eza, dust, lazydocker, **yazi, glow, atuin**; uv via install script; batcat→bat symlink | brew: git-delta, zoxide, eza, dust, lazydocker, yazi, glow, atuin |
+| **packages** | apt: zsh, git, tmux, ripgrep, fd-find, autojump, cargo, vim, curl, wget, unzip, lsof, bat, jq, btop, direnv | brew: git, curl, wget, tmux, autojump, ripgrep, fd, bat, jq, btop, direnv, gh |
+| **tools** | sha256-verified GitHub binaries: delta, zoxide, eza, dust, lazydocker, **yazi, glow, atuin, gh**; uv via install script; batcat→bat symlink | brew: git-delta, zoxide, eza, dust, lazydocker, yazi, glow, atuin, gh |
 | **mise** | `mise.run` + `mise use -g node@22` (replaces nvm) | same (single code path) |
 | **neovim** | nvim v0.11.0 to `/opt` (SHA256-verified) | brew neovim |
 | **ohmyzsh** | Oh My Zsh + Powerlevel10k + syntax-highlighting + autosuggestions (idempotent git update) | same |

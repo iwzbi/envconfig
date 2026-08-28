@@ -1,5 +1,24 @@
-# Ubuntu/Debian apt packages. autojump lives in the 'universe' component
-# (enabled by default on stock Ubuntu desktop/24.04 image).
+# Ubuntu/Debian apt packages. `autojump` lives in the `universe` component
+# (enabled by default on stock Ubuntu 22.04 and 24.04). `gh` is NOT here — it
+# is absent from 22.04's default archives, so it is installed from its GitHub
+# .deb by the `tools` role (see vars/versions.yml :: github_tools).
+#
+# Proxy bypass: many corporate proxies 403 on Ubuntu apt mirrors. This drops
+# /etc/apt/apt.conf.d/99no-proxy so apt ignores http_proxy/https_proxy env and
+# goes direct to the mirrors (which are usually reachable even when the proxy
+# is needed for GitHub/PyPI). Idempotent: a copy with unchanged content is ok.
+- name: Bypass proxy for apt (corporate proxies often 403 on Ubuntu mirrors)
+  ansible.builtin.copy:
+    dest: /etc/apt/apt.conf.d/99no-proxy
+    content: |
+      Acquire::http::Proxy "DIRECT";
+      Acquire::https::Proxy "DIRECT";
+    mode: "0644"
+    owner: root
+    group: root
+  become: true
+  tags: [packages]
+
 - name: Install apt packages
   become: true
   ansible.builtin.package:
@@ -20,6 +39,5 @@
       - jq
       - btop
       - direnv
-      - gh
     state: present
   tags: [packages]

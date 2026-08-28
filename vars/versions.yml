@@ -90,3 +90,13 @@ github_tools:
     url: "https://github.com/atuinsh/atuin/releases/download/v{version}/atuin-x86_64-unknown-linux-musl.tar.gz"
     type: archive
     dest: user
+  # gh (GitHub CLI): installed from its .deb so it works on Ubuntu 22.04 too,
+  # where `gh` is NOT in the default apt archives (only 24.04+ has it). On macOS
+  # the `packages` role installs it via Homebrew (brew name == "gh").
+  - name: gh
+    version: "2.98.0"
+    sha256: "f65a3fa2fa0eb2e97c445ee3f5e087a40aae03b64847f45a8f13805e504535d6"
+    url: "https://github.com/cli/cli/releases/download/v{version}/gh_{version}_linux_amd64.deb"
+    type: deb
+    dest: system
+    brew: gh
