@@ -17,12 +17,14 @@
 node_major: "22"
 
 # --- neovim ---
-# Linux: pinned binary to /opt (sha256-verified). macOS: brew, unpinned (D001).
+# Linux: pinned binary to ~/.local (sha256-verified, user-local — no sudo, D009).
+# macOS: brew, unpinned (D001).
 neovim_version: "0.11.0"
 neovim_sha256: "fe0a5bc79e64c5e4d9f844cd96157ebd3919ef1343b329e9ebc3f455924cc7d6"
 
 # --- lazygit ---
-# Linux: pinned binary to /usr/local/bin. macOS: brew, unpinned (D001).
+# Linux: pinned binary to ~/.local/bin (sha256-verified, user-local — no sudo, D009).
+# macOS: brew, unpinned (D001).
 lazygit_version: "0.44.1"
 lazygit_sha256: "84682f4ad5a449d0a3ffbc8332200fe8651aee9dd91dcd8d87197ba6c2450dbc"
 

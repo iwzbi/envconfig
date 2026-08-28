@@ -2,7 +2,14 @@
 # shared github_binary role. Idempotent: a version check (binary present AND
 # --version output contains the target version) skips tools already current.
 # batcat->bat symlink handles the Ubuntu naming quirk. uv via install script
-# (creates guard) as a guarantee for users who bypass install.sh.
+# (stat-gated: skipped entirely when uv is already present, so /tmp clearing
+# never triggers a redundant re-download of the installer).
+#
+# Per-tool tags: the check + install tasks carry EVERY github_tools name, so
+# `--tags yazi` selects just these tasks and the version-check `when` skips the
+# others (only yazi installs on an existing machine). Caveat: on a FRESH
+# machine `--tags <tool>` installs all missing tools (the when gates on version,
+# not tags) — use the full playbook for first setup.
 
 - name: Symlink batcat to bat (Ubuntu quirk, user-local — no sudo)
   ansible.builtin.shell: '[ -f /usr/bin/batcat ] && ln -sf /usr/bin/batcat {{ ansible_facts.user_dir }}/.local/bin/bat || true'
@@ -21,7 +28,7 @@
   loop: "{{ github_tools }}"
   register: tools_github_versions
   changed_when: false
-  tags: [tools]
+  tags: "{{ ['tools'] + (github_tools | map(attribute='name') | list) }}"
 
 - name: Install or upgrade github binary tools
   ansible.builtin.include_role:
@@ -33,6 +40,13 @@
   vars:
     github_binary_tool: "{{ item }}"
   when: "item.version not in tools_github_versions.results[tool_idx].stdout"
+  tags: "{{ ['tools'] + (github_tools | map(attribute='name') | list) }}"
+
+- name: Check if uv is installed
+  ansible.builtin.stat:
+    path: "{{ ansible_facts.user_dir }}/.local/bin/uv"
+  register: tools_uv_binary
+  changed_when: false
   tags: [tools]
 
 - name: Download uv installer
@@ -41,6 +55,7 @@
     dest: /tmp/uv-install.sh
     mode: "0755"
   register: tools_uv_installer
+  when: not tools_uv_binary.stat.exists
   tags: [tools]
 
 - name: Install uv (fast Python package manager)
@@ -49,5 +64,5 @@
     creates: "{{ ansible_facts.user_dir }}/.local/bin/uv"
   environment:
     UV_INSTALL_DIR: "{{ ansible_facts.user_dir }}/.local/bin"
-  when: tools_uv_installer.changed
+  when: not tools_uv_binary.stat.exists
   tags: [tools]

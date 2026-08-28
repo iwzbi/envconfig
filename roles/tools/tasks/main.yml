@@ -10,4 +10,4 @@
 
 - name: Install tools for the current OS
   ansible.builtin.include_tasks: "{{ ansible_facts.system | lower }}.yml"
-  tags: [tools]
+  tags: "{{ ['tools'] + (github_tools | map(attribute='name') | list) }}"

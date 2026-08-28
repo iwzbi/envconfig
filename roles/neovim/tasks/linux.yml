@@ -1,12 +1,24 @@
 # Neovim pinned (sha256-verified), extracted user-local to ~/.local — no sudo
 # (D009). The tarball extracts to nvim-linux-x86_64/bin/nvim; conf/.zshrc adds
-# ~/.local/nvim-linux-x86_64/bin to PATH (guarded). get_url's checksum makes
-# the download idempotent; remove+unarchive only run when the download changed.
+# ~/.local/nvim-linux-x86_64/bin to PATH (guarded).
+#
+# Idempotency: a version check (binary present AND --version output contains
+# the target version) skips download/remove/unarchive entirely. Without it,
+# get_url's /tmp dest would re-download + re-extract every run once /tmp is
+# cleared (every reboot / fresh CI container), even when the version is current.
+
 - name: Ensure ~/.local exists
   ansible.builtin.file:
     path: "{{ ansible_facts.user_dir }}/.local"
     state: directory
     mode: "0755"
+  tags: [neovim]
+
+- name: Check installed neovim version
+  ansible.builtin.command: "{{ ansible_facts.user_dir }}/.local/nvim-linux-x86_64/bin/nvim --version"
+  register: neovim_current
+  changed_when: false
+  failed_when: false
   tags: [neovim]
 
 - name: Download neovim v{{ neovim_version }}
@@ -16,13 +28,14 @@
     checksum: "sha256:{{ neovim_sha256 }}"
     mode: "0644"
   register: neovim_download
+  when: "neovim_version not in neovim_current.stdout"
   tags: [neovim]
 
 - name: Remove old user-local neovim installation
   ansible.builtin.file:
     path: "{{ ansible_facts.user_dir }}/.local/nvim-linux-x86_64"
     state: absent
-  when: neovim_download.changed
+  when: "neovim_version not in neovim_current.stdout"
   tags: [neovim]
 
 - name: Unarchive neovim to ~/.local
@@ -30,5 +43,5 @@
     src: "/tmp/nvim-v{{ neovim_version }}.tar.gz"
     dest: "{{ ansible_facts.user_dir }}/.local"
     remote_src: true
-  when: neovim_download.changed
+  when: "neovim_version not in neovim_current.stdout"
   tags: [neovim]

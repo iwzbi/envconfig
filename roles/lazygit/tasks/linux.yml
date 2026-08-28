@@ -1,12 +1,23 @@
 # lazygit pinned (sha256-verified), installed user-local to ~/.local/bin — no
-# sudo (D009). Idempotency relies on get_url's checksum: unchanged download =>
-# skip extract+install (the version check in tools/tasks/linux.yml does not
-# cover lazygit, which has its own role).
+# sudo (D009).
+#
+# Idempotency: a version check (binary present AND --version output contains
+# the target version) skips download/extract/install entirely. Without it, the
+# /tmp dest would re-download + re-extract every run once /tmp is cleared, even
+# when the version is current (mirrors the neovim role's fix).
+
 - name: Ensure ~/.local/bin exists
   ansible.builtin.file:
     path: "{{ ansible_facts.user_dir }}/.local/bin"
     state: directory
     mode: "0755"
+  tags: [lazygit]
+
+- name: Check installed lazygit version
+  ansible.builtin.command: "{{ ansible_facts.user_dir }}/.local/bin/lazygit --version"
+  register: lazygit_current
+  changed_when: false
+  failed_when: false
   tags: [lazygit]
 
 - name: Download lazygit v{{ lazygit_version }}
@@ -16,6 +27,7 @@
     checksum: "sha256:{{ lazygit_sha256 }}"
     mode: "0644"
   register: lazygit_download
+  when: "lazygit_version not in lazygit_current.stdout"
   tags: [lazygit]
 
 - name: Create lazygit extract directory
@@ -23,7 +35,7 @@
     path: "/tmp/lazygit-v{{ lazygit_version }}_extract"
     state: directory
     mode: "0755"
-  when: lazygit_download.changed
+  when: "lazygit_version not in lazygit_current.stdout"
   tags: [lazygit]
 
 - name: Extract lazygit
@@ -31,7 +43,7 @@
     src: "/tmp/lazygit-v{{ lazygit_version }}.tar.gz"
     dest: "/tmp/lazygit-v{{ lazygit_version }}_extract"
     remote_src: true
-  when: lazygit_download.changed
+  when: "lazygit_version not in lazygit_current.stdout"
   tags: [lazygit]
 
 - name: Install lazygit binary to ~/.local/bin
@@ -40,5 +52,5 @@
     dest: "{{ ansible_facts.user_dir }}/.local/bin/lazygit"
     mode: "0755"
     remote_src: true
-  when: lazygit_download.changed
+  when: "lazygit_version not in lazygit_current.stdout"
   tags: [lazygit]

@@ -1,10 +1,12 @@
 # opencode CLI via npm under mise's node (replaces the old nvm-sourcing path —
-# D003). Idempotent: npm's summary line reports added/removed/changed counts;
-# "up to date" (no change) matches none of those. Configs synced authoritatively
-# from conf/opencode/. Note: uses ansible_facts.user_dir (NOT the deprecated
-# ansible_facts.env.HOME that the old role used, which was wrong under become).
+# D003). Always @latest (user preference) — npm re-checks the registry each
+# run, so this may report a cosmetic changed=1; that's accepted in exchange
+# for always having the newest opencode. Configs are synced authoritatively
+# from conf/opencode/ — pre-existing files get a one-time .standup.bak
+# (mirrors the configs role, see D002). Uses ansible_facts.user_dir (NOT the
+# deprecated ansible_facts.env.HOME).
 
-- name: Install opencode via npm (always latest, skips when current)
+- name: Install opencode via npm (always latest)
   ansible.builtin.shell: |
     {{ ansible_facts.user_dir }}/.local/bin/mise exec -- npm install -g opencode-ai@latest
   args:
@@ -28,6 +30,19 @@
     mode: "0755"
   tags: [opencode]
 
+- name: Preserve pre-existing opencode configs (one-time backup)
+  ansible.builtin.shell: |
+    src="{{ ansible_facts.user_dir }}/.config/opencode/{{ item.path | basename }}"
+    bak="${src}.standup.bak"
+    [ -f "$src" ] && [ ! -f "$bak" ] && cp -a "$src" "$bak" || true
+  args:
+    executable: /bin/bash
+  loop: "{{ opencode_conf_files.files }}"
+  loop_control:
+    label: "{{ item.path | basename }}"
+  changed_when: false
+  tags: [opencode]
+
 - name: Sync pre-saved opencode configs (authoritative)
   ansible.builtin.copy:
     src: "{{ item.path }}"
@@ -43,6 +58,16 @@
     path: "{{ ansible_facts.user_dir }}/.omo"
     state: directory
     mode: "0755"
+  tags: [opencode]
+
+- name: Preserve pre-existing omo.jsonc (one-time backup)
+  ansible.builtin.shell: |
+    src="{{ ansible_facts.user_dir }}/.omo/omo.jsonc"
+    bak="${src}.standup.bak"
+    [ -f "$src" ] && [ ! -f "$bak" ] && cp -a "$src" "$bak" || true
+  args:
+    executable: /bin/bash
+  changed_when: false
   tags: [opencode]
 
 - name: Sync oh-my-openagent omo.jsonc (authoritative)
