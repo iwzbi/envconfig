@@ -300,6 +300,28 @@ sudo git config --global http.proxy http://PROXY:PORT
 echo 'Defaults env_keep += "http_proxy https_proxy HTTP_PROXY HTTPS_PROXY"' | sudo tee /etc/sudoers.d/keep_proxy
 ```
 
+### Air-gapped / red-zone (uv install fallback)
+
+`install.sh` and the `tools` role both fetch uv from
+`https://astral.sh/uv/install.sh`. If your network blocks astral.sh (e.g. a
+corporate "red zone"), the install **automatically falls back** instead of
+failing (see [memory/decisions.md D011](memory/decisions.md#d011)):
+
+- **macOS** → `brew install uv` (uv is in Homebrew core; brew is ensured by
+  `install.sh` on a fresh Mac).
+- **Linux** → `pipx install uv` (installs pipx via `sudo apt-get install -y
+  pipx` first if missing). Requires **PyPI to be reachable**.
+
+Both land uv in `~/.local/bin`, so the rest of the setup is identical. If
+astral.sh **and** PyPI are both unreachable (fully air-gapped), pre-stage the
+uv binary yourself:
+
+```bash
+mkdir -p ~/.local/bin && cp /path/to/predownloaded-uv ~/.local/bin/uv && chmod +x ~/.local/bin/uv
+```
+
+`install.sh`'s `command -v uv` check then skips the whole install.
+
 Known items to watch
 --------------------
 Moved to [memory/known-issues.md](memory/known-issues.md). Highlights:

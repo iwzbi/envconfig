@@ -142,3 +142,39 @@ with no issues — D001).
 if green. The weekly job itself does NOT run tests (no duplication — the PR
 triggers them). If a bumped version breaks CI, the PR stays red: investigate,
 don't merge.
+
+## D011 — uv install falls back when astral.sh is unreachable (red zone)
+
+**Date:** 2026-08-28
+**Context:** `install.sh` bootstraps uv *before* the playbook (uv installs
+ansible), and the `tools` role installs uv on Linux as a guarantee for users
+who bypass `install.sh`. Both reached for `https://astral.sh/uv/install.sh`.
+In a restricted network ("red zone") that 403s or times out on astral.sh, the
+bootstrap dies before the playbook can start — the whole setup is blocked with
+no recourse. `apt install uv` is not a fallback: uv is absent from the official
+Ubuntu/Debian archives (`Unable to locate package`), and the only apt source
+(deb.griffo.io) is itself an external host that is also typically unreachable
+in a red zone.
+**Decision:** Keep the Astral installer as the *primary* path but fall back
+automatically when it is unreachable:
+- `install.sh`: `curl --max-time 20` the installer to a temp file; on failure,
+  by OS — macOS: `brew install uv` (uv is in Homebrew core; brew is already
+  ensured by `install.sh` on a fresh Mac); Linux: `pipx install uv`, running
+  `sudo apt-get install -y pipx` first if pipx is missing (sudo for apt is
+  already an expected prerequisite — D009; pipx needs PyPI reachable).
+- `roles/tools/tasks/linux.yml`: the uv install is a `block`/`rescue`; the
+  `rescue` runs `pipx install uv` when the Astral `get_url`/command fails.
+- `pipx` is added to the `packages` role's apt list so the `tools`-role
+  fallback can rely on pipx already being present (pipx is a system package).
+Both fallbacks land uv in `~/.local/bin` — the same path the Astral installer
+uses — so PATH and the `tools` role's stat-gate stay consistent regardless of
+which method installed it. macOS's `tools` role still does NOT install uv
+(D006 unchanged: `install.sh` owns uv on both platforms; brew on mac is the
+fallback inside `install.sh`, not the `tools` role).
+**Consequence:** Red-zone users with PyPI reachable get a working setup with no
+extra flags (zero-config). Red-zone users WITHOUT PyPI (fully air-gapped) must
+still pre-stage the uv binary to `~/.local/bin/uv` by hand — `install.sh`'s
+`command -v uv` gate then skips the whole install. The fallback adds one sudo
+hit (`apt install pipx`) on Linux during the `install.sh` bootstrap, within the
+existing "sudo for apt system packages" contract. uv is NOT version-pinned via
+the fallbacks (follows brew/pipx), consistent with D006 not pinning uv.
