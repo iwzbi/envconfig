@@ -178,3 +178,29 @@ still pre-stage the uv binary to `~/.local/bin/uv` by hand — `install.sh`'s
 hit (`apt install pipx`) on Linux during the `install.sh` bootstrap, within the
 existing "sudo for apt system packages" contract. uv is NOT version-pinned via
 the fallbacks (follows brew/pipx), consistent with D006 not pinning uv.
+
+## D012 — github_binary find excludes share/completions (same-named completion trap)
+
+**Date:** 2026-08-28
+**Context:** The `github_binary` role locates the binary inside an extracted
+`.deb`/tarball with `find <extract> -type f -name <bin> | head -1`. GitHub
+`.deb` releases ship a **same-named** bash-completion file alongside the real
+binary — e.g. `gh`'s `.deb` contains both `usr/bin/gh` (41 MB ELF) and
+`usr/share/bash-completion/completions/gh` (16 KB shell script). `find`'s result
+order is the filesystem's readdir order, which is **non-deterministic across
+filesystems**: on a real host's ext4 the completion file sorted *before* the
+binary, so `head -1` picked the script and `install` copied it to
+`~/.local/bin/gh`. `gh` then resolved to a completion script that `/bin/sh`
+cannot parse (`Syntax error: "(" unexpected`). It was deterministic *per
+filesystem* but varied *across* filesystems — CI ran on Docker overlayfs, where
+`find` returned the binary first, so the smoke test stayed green while real
+installs (the documented `curl ... | sh`) shipped a broken `gh`. Any `type: deb`
+tool (gh, delta) and any tarball shipping a same-name completion file was exposed.
+**Decision:** Exclude `*/share/*`, `*/bash-completion/*`, and
+`*/completions/*` from the `find`. Real binaries live under `usr/bin/` (deb) or
+the archive root / a `bin/` dir (tarball) — never under these paths — so the
+exclusions are safe and make selection **deterministic** regardless of readdir
+order.
+**Consequence:** The `gh`-as-completion-script failure mode is closed for every
+tool, and CI green no longer masks the bug because correctness no longer depends
+on `find` order.

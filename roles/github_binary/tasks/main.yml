@@ -54,7 +54,15 @@
 - name: Install binaries ({{ github_binary_tool.name }})
   ansible.builtin.shell: |
     set -o pipefail
-    src=$(find "{{ github_binary_extract }}" -type f -name "{{ github_binary_bin }}" | head -1)
+    # Exclude share/bash-completion/completions: .deb releases ship a same-named
+    # completion file (e.g. usr/share/bash-completion/completions/gh) that find
+    # can match BEFORE the real binary under usr/bin/, installing the shell
+    # script as the binary (D012). Real binaries live under usr/bin/ (deb) or
+    # the archive root / a bin/ dir (tarball) — never under these paths, so the
+    # exclusions are safe and make selection deterministic across filesystems.
+    src=$(find "{{ github_binary_extract }}" -type f -name "{{ github_binary_bin }}" \
+          ! -path "*/share/*" ! -path "*/bash-completion/*" ! -path "*/completions/*" \
+          | head -1)
     if [ -z "$src" ]; then echo "binary {{ github_binary_bin }} not found in archive" >&2; exit 1; fi
     install -m 0755 "$src" "{{ github_binary_dir }}/{{ github_binary_bin }}"
   args:
