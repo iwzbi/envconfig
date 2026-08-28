@@ -3,27 +3,45 @@
 # is absent from 22.04's default archives, so it is installed from its GitHub
 # .deb by the `tools` role (see vars/versions.yml :: github_tools).
 #
-# Proxy bypass in one task: corporate proxies often 403 on Ubuntu apt mirrors.
-# When a proxy is set in the environment we drop a 99no-proxy apt.conf.d snippet
-# so apt ignores it and goes direct to the mirrors (usually reachable even when
-# the proxy is needed for GitHub/PyPI). When NO proxy is set, the file renders
-# empty (harmless — apt ignores empty apt.conf.d files) instead of leaving a
-# stale DIRECT that would override a user's intentional apt-proxy config.
+# Proxy bypass: corporate proxies often 403 on Ubuntu apt mirrors. When a
+# proxy is set in the environment we drop a 99no-proxy apt.conf.d snippet so
+# apt ignores it and goes direct to the mirrors (usually reachable even when
+# the proxy is needed for GitHub/PyPI). When NO proxy is set we REMOVE any
+# stale 99no-proxy so a machine that previously used a proxy returns to normal
+# apt proxy resolution (never overrides a user's intentional apt-proxy config).
+# Split into set_fact + conditional copy + conditional file: a single templated
+# `copy` with `content:` renders empty when no proxy is set, and the copy
+# module rejects empty content ("src (or content) is required").
+- name: Check whether an HTTP(S) proxy is configured
+  ansible.builtin.set_fact:
+    packages_proxy_configured: >-
+      {{
+        (lookup('ansible.builtin.env', 'http_proxy') | length > 0)
+        or (lookup('ansible.builtin.env', 'https_proxy') | length > 0)
+        or (lookup('ansible.builtin.env', 'HTTP_PROXY') | length > 0)
+        or (lookup('ansible.builtin.env', 'HTTPS_PROXY') | length > 0)
+      }}
+  tags: [packages]
+
 - name: Bypass proxy for apt when a proxy is configured
   become: true
   ansible.builtin.copy:
     dest: /etc/apt/apt.conf.d/99no-proxy
     content: |
-      {% if (lookup('ansible.builtin.env', 'http_proxy') | length > 0)
-         or (lookup('ansible.builtin.env', 'https_proxy') | length > 0)
-         or (lookup('ansible.builtin.env', 'HTTP_PROXY') | length > 0)
-         or (lookup('ansible.builtin.env', 'HTTPS_PROXY') | length > 0) %}
       Acquire::http::Proxy "DIRECT";
       Acquire::https::Proxy "DIRECT";
-      {% endif %}
     mode: "0644"
     owner: root
     group: root
+  when: packages_proxy_configured | bool
+  tags: [packages]
+
+- name: Remove apt proxy bypass when no proxy is configured
+  become: true
+  ansible.builtin.file:
+    path: /etc/apt/apt.conf.d/99no-proxy
+    state: absent
+  when: not (packages_proxy_configured | bool)
   tags: [packages]
 
 - name: Install apt packages
