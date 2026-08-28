@@ -64,5 +64,6 @@
       - jq
       - btop
       - direnv
+      - pipx  # uv red-zone fallback when astral.sh is unreachable (D011)
     state: present
   tags: [packages]

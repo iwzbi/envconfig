@@ -49,20 +49,32 @@
   changed_when: false
   tags: [tools]
 
-- name: Download uv installer
-  ansible.builtin.get_url:
-    url: https://astral.sh/uv/install.sh
-    dest: /tmp/uv-install.sh
-    mode: "0755"
-  register: tools_uv_installer
+# Astral's installer first (preferred). In a red zone where astral.sh is
+# unreachable the get_url/command pair fails over to `pipx install uv` (D011).
+# pipx is a system package (installed by the `packages` role) and lands uv in
+# ~/.local/bin, same path as the Astral installer -> the stat-gate above stays
+# consistent across both install methods.
+- name: Install uv (Astral installer, with pipx fallback)
   when: not tools_uv_binary.stat.exists
   tags: [tools]
-
-- name: Install uv (fast Python package manager)
-  ansible.builtin.command: /tmp/uv-install.sh
-  args:
-    creates: "{{ ansible_facts.user_dir }}/.local/bin/uv"
-  environment:
-    UV_INSTALL_DIR: "{{ ansible_facts.user_dir }}/.local/bin"
-  when: not tools_uv_binary.stat.exists
-  tags: [tools]
+  block:
+    - name: Download uv installer
+      ansible.builtin.get_url:
+        url: https://astral.sh/uv/install.sh
+        dest: /tmp/uv-install.sh
+        mode: "0755"
+      register: tools_uv_installer
+    - name: Run uv installer
+      ansible.builtin.command: /tmp/uv-install.sh
+      args:
+        creates: "{{ ansible_facts.user_dir }}/.local/bin/uv"
+      environment:
+        UV_INSTALL_DIR: "{{ ansible_facts.user_dir }}/.local/bin"
+  rescue:
+    - name: Astral.sh unreachable — fall back to pipx (D011)
+      ansible.builtin.command: pipx install uv
+      args:
+        creates: "{{ ansible_facts.user_dir }}/.local/bin/uv"
+      environment:
+        PIPX_HOME: "{{ ansible_facts.user_dir }}/.local/pipx"
+        PIPX_BIN_DIR: "{{ ansible_facts.user_dir }}/.local/bin"
