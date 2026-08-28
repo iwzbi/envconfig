@@ -4,21 +4,45 @@
 #
 # The legacy ~/.nvm directory is intentionally NOT removed (user data left
 # alone); it simply stops being sourced once conf/.zshrc switches to mise.
+#
+# Install path uses a block/rescue (D016): mise.run is just a redirect to the
+# GitHub release's install.sh. In a "red zone" network the mise.run redirect
+# tunnel can 403 while github.com is still reachable directly — the rescue
+# fetches the SAME installer via its stable GitHub URL. No version pin or arch
+# detection is needed (the installer handles both), and it lands in
+# ~/.local/bin/mise exactly like the primary path.
 
-- name: Download mise installer
-  ansible.builtin.get_url:
-    url: https://mise.run
-    dest: /tmp/mise-install.sh
-    mode: "0755"
-  register: mise_installer
-  tags: [mise]
+- name: Install mise (mise.run, with GitHub-direct fallback)
+  block:
+    - name: Download mise installer (mise.run)
+      ansible.builtin.get_url:
+        url: https://mise.run
+        dest: /tmp/mise-install.sh
+        mode: "0755"
+      register: mise_installer
+      tags: [mise]
 
-- name: Install mise
-  ansible.builtin.command: /tmp/mise-install.sh
-  args:
-    creates: "{{ ansible_facts.user_dir }}/.local/bin/mise"
-  when: mise_installer.changed
-  tags: [mise]
+    - name: Install mise
+      ansible.builtin.command: /tmp/mise-install.sh
+      args:
+        creates: "{{ ansible_facts.user_dir }}/.local/bin/mise"
+      when: mise_installer.changed
+      tags: [mise]
+  rescue:
+    - name: Download mise installer (GitHub direct fallback, D016)
+      ansible.builtin.get_url:
+        url: https://github.com/jdx/mise/releases/latest/download/install.sh
+        dest: /tmp/mise-install.sh
+        mode: "0755"
+      register: mise_installer
+      tags: [mise]
+
+    - name: Install mise (GitHub direct fallback, D016)
+      ansible.builtin.command: /tmp/mise-install.sh
+      args:
+        creates: "{{ ansible_facts.user_dir }}/.local/bin/mise"
+      when: mise_installer.changed
+      tags: [mise]
 
 - name: Check installed node via mise
   ansible.builtin.command: "{{ ansible_facts.user_dir }}/.local/bin/mise ls --current node"
