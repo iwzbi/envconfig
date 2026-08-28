@@ -304,3 +304,38 @@ instead of a silently broken CLI discovered later at the shell. The guards
 are non-destructive (no `~/.npmrc` editing — that remains a user decision per
 D014). Future npm packages inherit L1 automatically and should add their own
 L3-style post-install verify against the mise prefix.
+
+## D016 — red-zone fallback for the mise installer (GitHub-direct `install.sh`)
+
+**Date:** 2026-08-28
+**Context:** The `mise` role fetches its installer from `https://mise.run`
+and runs it. `mise.run` is itself just a redirect to the GitHub release's
+`install.sh` asset (`github.com/jdx/mise/releases/latest/download/install.sh`
+— a stable filename across releases). In a corporate "red zone" the proxy
+can 403 the `mise.run` → `github.com` redirect tunnel while `github.com`
+remains reachable directly, which makes the whole node/opencode chain
+unbootable (mise installs node; node is a prerequisite for npm/opencode).
+The other documented install methods don't help in this scenario: the npm
+package `@jdxcode/mise` is **circular** (needs node, which needs mise); the
+`mise.jdx.dev` apt repository and `ppa:jdxcode/mise` are the same external
+host family as `mise.run` (likely also blocked); `cargo install` needs a Rust
+toolchain; a version-pinned raw release binary would require per-arch sha256
+maintenance and contradicts mise's deliberately-unpinned "latest, self-update"
+design (D003).
+**Decision:** Wrap the download+install in a `block`/`rescue`. The primary
+path stays `mise.run` (unchanged behaviour on healthy networks); on failure
+the `rescue` fetches the **same installer** from its direct GitHub URL
+(`releases/latest/download/install.sh`) and runs it. Because it is the same
+`install.sh` the primary path uses, no version pinning, arch detection, or
+per-arch sha256 is needed — the installer handles platform/arch selection
+itself and lands mise in `~/.local/bin/mise` exactly like the primary path,
+so `mise activate` (D003) and the downstream node install are unaffected.
+**Consequence:** Users whose network blocks only the `mise.run` shortlink now
+get a transparent fallback instead of a hard stop at the first role that
+needs node. If `github.com` is *also* unreachable (fully air-gapped), both
+paths fail and the user must pre-stage the `mise` binary into
+`~/.local/bin/mise` themselves (the `creates:` gate then skips the install),
+mirroring the uv air-gapped escape hatch (D011). The fallback is sha256-less,
+matching `mise.run` itself (the installer verifies its own download); the
+project's sha256-verified-binary discipline (D009) is preserved for the
+`github_binary` path, which this does not touch.

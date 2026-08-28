@@ -322,6 +322,28 @@ mkdir -p ~/.local/bin && cp /path/to/predownloaded-uv ~/.local/bin/uv && chmod +
 
 `install.sh`'s `command -v uv` check then skips the whole install.
 
+### Air-gapped / red-zone (mise install fallback)
+
+The `mise` role fetches its installer from `https://mise.run`, which is itself
+just a redirect to the GitHub release's `install.sh`. If your network 403s
+the `mise.run` → `github.com` redirect tunnel (a corporate "red zone") but
+`github.com` is still reachable directly, the role **automatically falls back**
+to fetching that same installer from its direct GitHub URL
+(`github.com/jdx/mise/releases/latest/download/install.sh`) and runs it — no
+version pin or arch detection needed, and it still lands in `~/.local/bin/mise`
+(see [memory/decisions.md D016](memory/decisions.md#d016)).
+
+If `github.com` is *also* unreachable (fully air-gapped), the other documented
+install methods don't help: the npm package `@jdxcode/mise` is circular
+(needs node, which needs mise), and the `mise.jdx.dev` apt repo / PPA are the
+same external host family as `mise.run`. Pre-stage the binary yourself:
+
+```bash
+mkdir -p ~/.local/bin && cp /path/to/predownloaded-mise ~/.local/bin/mise && chmod +x ~/.local/bin/mise
+```
+
+The role's `creates:` check then skips the install.
+
 Known items to watch
 --------------------
 Moved to [memory/known-issues.md](memory/known-issues.md). Highlights:
