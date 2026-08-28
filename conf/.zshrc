@@ -176,10 +176,10 @@ export BAT_THEME='Dracula'
 
 # eza — modern ls with colors, icons, git status
 alias ls='eza --icons --git'
-alias ll='eza -l --icons --git --color-scale all --group-directories-first'
-alias la='eza -la --icons --git'
+alias ll='eza -lh --icons --git --color-scale all --group-directories-first --time-style long-iso --smart-group --binary'
+alias la='eza -lah --icons --git --color-scale all --time-style long-iso --smart-group --binary'
 alias lt='eza --tree --icons --level=2'
-alias lh='eza -la --icons --git --group-directories-first'
+alias lh='eza -lah --icons --git --color-scale all --group-directories-first --time-style long-iso --smart-group --binary'
 
 # bat — syntax-highlighted cat
 alias cat='bat --paging=never'
