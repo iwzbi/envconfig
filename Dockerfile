@@ -10,8 +10,8 @@ RUN echo 'Acquire::http::Proxy "DIRECT";' > /etc/apt/apt.conf.d/99no-proxy \
   && echo 'Acquire::https::Proxy "DIRECT";' >> /etc/apt/apt.conf.d/99no-proxy \
   && apt-get update \
   && apt-get install -y --no-install-recommends \
-       python3 python3-venv python3-pip \
-       sudo git curl wget ca-certificates openssh-client \
+        python3 \
+        sudo git curl wget ca-certificates openssh-client \
   && rm -rf /var/lib/apt/lists/*
 
 # Non-root ansible user with passwordless sudo. This mirrors a real host where
@@ -23,11 +23,13 @@ RUN useradd -m -s /bin/bash tester \
 WORKDIR /opt/envconfig
 COPY . .
 
-# Install ansible (+ ansible-lint for the lint TODO) into a venv, matching
-# requirements.txt. chown last so tester owns the venv too.
-RUN python3 -m venv .venv \
-  && .venv/bin/pip install --upgrade pip \
-  && .venv/bin/pip install -r requirements.txt ansible-lint \
+# Install uv (same installer the 'tools' role uses on a real host) and sync the
+# project environment from pyproject.toml + uv.lock. uv manages its own Python,
+# but system python3 is kept for ansible's apt module (needs python3-apt, which
+# ships with the ubuntu:24.04 base). chown last so tester owns the venv too.
+RUN curl -LsSf https://astral.sh/uv/install.sh | sh \
+  && ln -sf /root/.local/bin/uv /usr/local/bin/uv \
+  && uv sync \
   && chown -R tester:tester /opt/envconfig
 
 USER tester
