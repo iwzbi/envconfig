@@ -4,21 +4,6 @@
       "aggressive_truncation": true,
       "disable_omo_env": true
     },
-    "disabled_hooks": ["startup-toast"],
-    "agents": {
-      "build": { "models": ["idealab/deepseek-v4-flash-0731", "idealab/glm-5.2"] },
-      "plan": { "models": ["idealab/deepseek-v4-flash-0731", "idealab/glm-5.2"] },
-      "sisyphus": { "models": ["idealab/deepseek-v4-flash-0731", "idealab/glm-5.2"] },
-      "hephaestus": { "models": ["idealab/deepseek-v4-flash-0731", "idealab/glm-5.2"] },
-      "prometheus": { "models": ["idealab/deepseek-v4-flash-0731", "idealab/glm-5.2"] },
-      "oracle": { "models": ["idealab/deepseek-v4-flash-0731", "idealab/glm-5.2"] },
-      "metis": { "models": ["idealab/deepseek-v4-flash-0731", "idealab/glm-5.2"] },
-      "momus": { "models": ["idealab/deepseek-v4-flash-0731", "idealab/glm-5.2"] },
-      "atlas": { "models": ["idealab/deepseek-v4-flash-0731", "idealab/glm-5.2"] },
-      "explore": { "model": "idealab/deepseek-v4-flash-0731" },
-      "librarian": { "model": "idealab/deepseek-v4-flash-0731" },
-      "multimodal-looker": { "model": "idealab/deepseek-v4-flash-0731" },
-      "sisyphus-junior": { "model": "idealab/deepseek-v4-flash-0731" }
-    }
+    "disabled_hooks": ["startup-toast"]
   }
 }
